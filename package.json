@@ -1,0 +1,12 @@
+{
+  "name": "sinner-vouches",
+  "version": "1.0.0",
+  "description": "Sinner Services Vouch Bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.17.3"
+  }
+}
