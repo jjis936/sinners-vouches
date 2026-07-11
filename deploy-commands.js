@@ -13,44 +13,24 @@ const {
 
 const commands = [
 
-
     new SlashCommandBuilder()
-
-    .setName("panel")
-
-    .setDescription(
-        "Create the Sinner Services vouch panel"
-    )
-
-    .toJSON(),
-
+        .setName("panel")
+        .setDescription("Create the Sinner Services vouch panel")
+        .toJSON(),
 
 
     new SlashCommandBuilder()
-
-    .setName("vouchstats")
-
-    .setDescription(
-        "View Sinner Services statistics"
-    )
-
-    .toJSON(),
-
+        .setName("vouchstats")
+        .setDescription("View Sinner Services statistics")
+        .toJSON(),
 
 
     new SlashCommandBuilder()
-
-    .setName("leaderboard")
-
-    .setDescription(
-        "View top Sinner Services customers"
-    )
-
-    .toJSON()
-
+        .setName("leaderboard")
+        .setDescription("View top Sinner Services customers")
+        .toJSON()
 
 ];
-
 
 
 // ================================
@@ -66,80 +46,69 @@ const rest = new REST({
 );
 
 
-
 // ================================
-// DEPLOY
+// DEPLOY COMMANDS
 // ================================
 
-(async()=>{
+(async () => {
+
+    try {
+
+        console.log(
+            "⏳ Deploying Sinner Services commands..."
+        );
 
 
-try{
+        console.log(
+            "Client ID:",
+            process.env.CLIENT_ID
+        );
 
 
-console.log(
-"⏳ Deploying Sinner Services commands..."
-);
-
-
-
-console.log(
-"Client ID:",
-process.env.CLIENT_ID
-);
-
-
-console.log(
-"Guild ID:",
-process.env.GUILD_ID
-);
+        console.log(
+            "Guild ID:",
+            "1500601982740856875"
+        );
 
 
 
-await rest.put(
+        await rest.put(
 
+            Routes.applicationGuildCommands(
 
-Routes.applicationGuildCommands(
+                process.env.CLIENT_ID,
 
-    process.env.CLIENT_ID,
+                "1500601982740856875"
 
-    process.env.GUILD_ID
+            ),
 
-),
+            {
 
+                body: commands
 
-{
+            }
 
-    body: commands
-
-}
-
-
-);
+        );
 
 
 
-console.log(
-"✅ Sinner Services commands deployed!"
-);
+        console.log(
+            "✅ Sinner Services commands deployed!"
+        );
 
 
-
-}
-
-
-catch(error){
+    } catch(error) {
 
 
-console.log(
-"❌ Deploy Error:"
-);
+        console.log(
+            "❌ Deploy Error:"
+        );
 
 
-console.log(error);
+        console.log(error);
 
 
-}
+    }
 
 
 })();
