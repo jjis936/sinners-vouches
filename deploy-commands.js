@@ -2,35 +2,39 @@ require("dotenv").config();
 
 const {
     REST,
-    Routes,
-    SlashCommandBuilder
+    Routes
 } = require("discord.js");
 
 
 // ================================
-// COMMANDS
+// LOAD COMMANDS
 // ================================
 
 const commands = [
 
-    new SlashCommandBuilder()
-        .setName("panel")
-        .setDescription("Create the Sinner Services vouch panel")
+    require("./commands/panel")
+        .data
         .toJSON(),
 
 
-    new SlashCommandBuilder()
-        .setName("vouchstats")
-        .setDescription("View Sinner Services statistics")
+    require("./commands/vouchstats")
+        .data
         .toJSON(),
 
 
-    new SlashCommandBuilder()
-        .setName("leaderboard")
-        .setDescription("View top Sinner Services customers")
-        .toJSON()
+    require("./commands/post")
+        .data
+        .toJSON(),
 
-];
+
+    require("./commands/leaderboard")
+        ? require("./commands/leaderboard")
+            .data
+            .toJSON()
+        : null
+
+].filter(Boolean);
+
 
 
 // ================================
@@ -46,69 +50,78 @@ const rest = new REST({
 );
 
 
+
 // ================================
-// DEPLOY COMMANDS
+// DEPLOY
 // ================================
 
-(async () => {
-
-    try {
-
-        console.log(
-            "⏳ Deploying Sinner Services commands..."
-        );
+(async()=>{
 
 
-        console.log(
-            "Client ID:",
-            process.env.CLIENT_ID
-        );
+try{
 
 
-        console.log(
-            "Guild ID:",
-            "1500601982740856875"
-        );
+console.log(
+"⏳ Deploying Sinner Services commands..."
+);
 
 
 
-        await rest.put(
-
-            Routes.applicationGuildCommands(
-
-                process.env.CLIENT_ID,
-
-                "1500601982740856875"
-
-            ),
-
-            {
-
-                body: commands
-
-            }
-
-        );
+console.log(
+"Client ID:",
+process.env.CLIENT_ID
+);
 
 
 
-        console.log(
-            "✅ Sinner Services commands deployed!"
-        );
+console.log(
+"Guild ID:",
+"1500601982740856875"
+);
 
 
-    } catch(error) {
+
+await rest.put(
+
+Routes.applicationGuildCommands(
+
+    process.env.CLIENT_ID,
+
+    "1500601982740856875"
+
+),
+
+{
+
+    body: commands
+
+}
+
+);
 
 
-        console.log(
-            "❌ Deploy Error:"
-        );
+
+console.log(
+"✅ Sinner Services commands deployed!"
+);
 
 
-        console.log(error);
+
+}
 
 
-    }
+catch(error){
+
+
+console.log(
+"❌ Deploy Error:"
+);
+
+
+console.log(error);
+
+
+}
 
 
 })();
