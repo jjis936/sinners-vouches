@@ -7,8 +7,12 @@ const {
 const config = require("../config");
 
 
-const path =
+const vouchPath =
 "./database/vouches.json";
+
+
+const statsPath =
+"./database/settings.json";
 
 
 
@@ -23,53 +27,127 @@ async execute(message){
 
 
 
-    // No attachment = ignore
+    // Only process uploads
 
     if(message.attachments.size === 0)
         return;
 
 
 
-    let data = {};
+    let vouches = {};
 
+    if(fs.existsSync(vouchPath)){
 
-
-    if(fs.existsSync(path)){
-
-        data = JSON.parse(
-            fs.readFileSync(path)
+        vouches = JSON.parse(
+            fs.readFileSync(vouchPath)
         );
 
     }
 
 
 
-    const userVouch =
-    data[message.author.id];
+    const pending =
+    vouches[message.author.id];
 
 
 
-    // User has no pending vouch
+    // No pending review
 
-    if(!userVouch)
+    if(!pending)
         return;
 
 
 
+    let stats = {
 
-    const proof =
-    message.attachments.first();
+        totalVouches:0,
+
+        averageRating:0
+
+    };
+
+
+    if(fs.existsSync(statsPath)){
+
+        stats = JSON.parse(
+            fs.readFileSync(statsPath)
+        );
+
+    }
+
+
+
+
+    stats.totalVouches += 1;
+
+
+
+    const oldTotal =
+    stats.totalVouches - 1;
+
+
+
+    stats.averageRating =
+    (
+        (
+            stats.averageRating *
+            oldTotal
+        )
+        +
+        Number(pending.rating)
+
+    )
+    /
+    stats.totalVouches;
+
+
+
+
+    const reviewNumber =
+    stats.totalVouches;
+
+
+
+    fs.writeFileSync(
+
+        statsPath,
+
+        JSON.stringify(
+            stats,
+            null,
+            2
+        )
+
+    );
+
 
 
 
 
     const stars =
     "⭐".repeat(
-        Math.min(
-            Number(userVouch.rating),
-            5
-        )
+        Number(pending.rating)
     );
+
+
+
+    let ratingText =
+    "Average";
+
+
+
+    if(pending.rating == 5)
+        ratingText = "Excellent";
+
+    if(pending.rating == 4)
+        ratingText = "Great";
+
+    if(pending.rating == 3)
+        ratingText = "Good";
+
+    if(pending.rating <= 2)
+        ratingText = "Needs Improvement";
+
 
 
 
@@ -82,7 +160,7 @@ async execute(message){
     )
 
     .setTitle(
-        "💎 NEW CUSTOMER REVIEW"
+        `💎 CUSTOMER REVIEW #${reviewNumber}`
     )
 
     .setDescription(
@@ -100,20 +178,22 @@ ${message.author}
 
 ${stars}
 
+${pending.rating}/5 • ${ratingText}
+
 
 🎮 **Service Used**
 
-${userVouch.service}
+${pending.service}
 
 
 💬 **Feedback**
 
-${userVouch.feedback}
+${pending.feedback}
 
 
 📸 **Proof**
 
-Attached below
+✅ Verified
 
 
 ━━━━━━━━━━━━━━━━
@@ -125,7 +205,16 @@ Attached below
 
     )
 
-    .setTimestamp();
+    .setTimestamp()
+
+    .setFooter({
+
+        text:
+        "Sinner Services • Verified Reviews"
+
+    });
+
+
 
 
 
@@ -141,12 +230,12 @@ Attached below
 
         await channel.send({
 
-            embeds:[
-                embed
-            ],
+            embeds:[embed],
 
             files:[
-                proof.url
+
+                message.attachments.first().url
+
             ]
 
         });
@@ -157,7 +246,7 @@ Attached below
 
 
 
-    // Delete proof message
+    // Remove uploaded proof message
 
     await message.delete()
     .catch(()=>{});
@@ -165,17 +254,18 @@ Attached below
 
 
 
-    // Remove saved vouch
+    // Clear pending review
 
-    delete data[message.author.id];
+    delete vouches[message.author.id];
+
 
 
     fs.writeFileSync(
 
-        path,
+        vouchPath,
 
         JSON.stringify(
-            data,
+            vouches,
             null,
             2
         )
