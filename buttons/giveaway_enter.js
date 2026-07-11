@@ -1,39 +1,58 @@
+const fs = require("fs");
+const path = require("path");
+
+
+const giveawayFile = path.join(
+    __dirname,
+    "../data/giveaways.json"
+);
+
+
+
 module.exports = {
+
+
+    customId: "giveaway_enter",
+
 
 
     async execute(interaction){
 
 
-        if(!interaction.client.giveawayEntries){
+        let giveaways = [];
 
-            interaction.client.giveawayEntries = new Map();
+
+        if(fs.existsSync(giveawayFile)){
+
+
+            giveaways = JSON.parse(
+
+                fs.readFileSync(
+                    giveawayFile
+                )
+
+            );
+
 
         }
 
 
 
-        let entries =
-        interaction.client.giveawayEntries.get(
-            interaction.message.id
+        const giveaway = giveaways.find(
+
+            g => g.messageId === interaction.message.id
+
         );
 
 
 
-        if(!entries){
-
-            entries = [];
-
-        }
-
-
-
-        if(entries.includes(interaction.user.id)){
+        if(!giveaway){
 
 
             return interaction.reply({
 
                 content:
-                "❌ You already entered this giveaway!",
+                "❌ This giveaway no longer exists.",
 
                 ephemeral:true
 
@@ -44,17 +63,67 @@ module.exports = {
 
 
 
-        entries.push(
+        if(giveaway.ended){
+
+
+            return interaction.reply({
+
+                content:
+                "❌ This giveaway has ended.",
+
+                ephemeral:true
+
+            });
+
+
+        }
+
+
+
+        if(
+
+            giveaway.entries.includes(
+                interaction.user.id
+            )
+
+        ){
+
+
+            return interaction.reply({
+
+                content:
+                "❌ You already entered!",
+
+                ephemeral:true
+
+            });
+
+
+        }
+
+
+
+        giveaway.entries.push(
+
             interaction.user.id
+
         );
 
 
 
-        interaction.client.giveawayEntries.set(
+        fs.writeFileSync(
 
-            interaction.message.id,
+            giveawayFile,
 
-            entries
+            JSON.stringify(
+
+                giveaways,
+
+                null,
+
+                2
+
+            )
 
         );
 
@@ -72,37 +141,28 @@ module.exports = {
 
 
         const embed =
-        interaction.message.embeds[0];
+
+        interaction.message.embeds[0].data;
 
 
 
-        if(embed){
+        embed.description =
 
+        embed.description.replace(
 
-            const newEmbed =
-            embed.toJSON();
+            /👥 \*\*Entries\*\*\n\d+/,
 
+            `👥 **Entries**\n${giveaway.entries.length}`
 
-
-            newEmbed.description =
-            newEmbed.description.replace(
-
-                /👥 \*\*Entries\*\*\n\d+/,
-
-                `👥 **Entries**\n${entries.length}`
-
-            );
+        );
 
 
 
-            await interaction.message.edit({
+        await interaction.message.edit({
 
-                embeds:[newEmbed]
+            embeds:[embed]
 
-            });
-
-
-        }
+        });
 
 
     }
