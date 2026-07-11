@@ -11,7 +11,7 @@ const fs = require("fs");
 const path = require("path");
 
 
-const filePath = path.join(
+const giveawayFile = path.join(
     __dirname,
     "../data/giveaways.json"
 );
@@ -20,70 +20,72 @@ const filePath = path.join(
 
 module.exports = {
 
-data: new SlashCommandBuilder()
+    data: new SlashCommandBuilder()
 
-.setName("giveaway")
+    .setName("giveaway")
 
-.setDescription("Create an automatic giveaway")
+    .setDescription("Create an automatic giveaway")
 
-.addStringOption(option =>
-    option
-    .setName("prize")
-    .setDescription("Giveaway prize")
-    .setRequired(true)
-)
+    .addStringOption(option =>
+        option
+        .setName("prize")
+        .setDescription("Giveaway prize")
+        .setRequired(true)
+    )
 
-.addIntegerOption(option =>
-    option
-    .setName("duration")
-    .setDescription("Duration in minutes")
-    .setRequired(true)
-),
-
-
-
-async execute(interaction){
-
-
-if(
-!interaction.member.permissions.has(
-PermissionFlagsBits.ManageGuild
-)
-){
-
-return interaction.reply({
-
-content:"❌ You need Manage Server permission.",
-
-ephemeral:true
-
-});
-
-}
+    .addIntegerOption(option =>
+        option
+        .setName("duration")
+        .setDescription("Duration in minutes")
+        .setRequired(true)
+    ),
 
 
 
-const prize =
-interaction.options.getString("prize");
+    async execute(interaction){
 
 
-const duration =
-interaction.options.getInteger("duration");
+        if(
+            !interaction.member.permissions.has(
+                PermissionFlagsBits.ManageGuild
+            )
+        ){
+
+            return interaction.reply({
+
+                content:
+                "❌ You need Manage Server permission.",
+
+                ephemeral:true
+
+            });
+
+        }
 
 
 
-const endTime =
-Date.now() + duration * 60000;
+        const prize =
+        interaction.options.getString("prize");
+
+
+        const duration =
+        interaction.options.getInteger("duration");
 
 
 
-const embed = new EmbedBuilder()
+        const endTime =
+        Date.now() + (duration * 60000);
 
-.setColor("#B30000")
 
-.setTitle("🎉 Sinner Services Giveaway")
 
-.setDescription(
+        const embed =
+        new EmbedBuilder()
+
+        .setColor("#B30000")
+
+        .setTitle("🎉 Sinner Services Giveaway")
+
+        .setDescription(
 `
 🎁 **Prize**
 ${prize}
@@ -96,104 +98,110 @@ ${prize}
 
 ━━━━━━━━━━━━━━
 
-Click below to enter!
+Click the button below to enter!
 `
-)
+        )
 
-.setFooter({
+        .setFooter({
 
-text:"Sinner Services"
+            text:"Sinner Services"
 
-})
+        })
 
-.setTimestamp();
-
-
-
-const button =
-new ButtonBuilder()
-
-.setCustomId("giveaway_enter")
-
-.setLabel("🎉 Enter Giveaway")
-
-.setStyle(ButtonStyle.Danger);
+        .setTimestamp();
 
 
 
-const row =
-new ActionRowBuilder()
+        const button =
+        new ButtonBuilder()
 
-.addComponents(button);
+        .setCustomId("giveaway_enter")
 
+        .setLabel("🎉 Enter Giveaway")
 
-
-const message =
-await interaction.channel.send({
-
-embeds:[embed],
-
-components:[row]
-
-});
+        .setStyle(ButtonStyle.Danger);
 
 
 
-let giveaways = [];
+        const row =
+        new ActionRowBuilder()
 
-if(fs.existsSync(filePath)){
-
-giveaways =
-JSON.parse(
-fs.readFileSync(filePath)
-);
-
-}
+        .addComponents(button);
 
 
 
-giveaways.push({
+        const message =
+        await interaction.channel.send({
 
-messageId: message.id,
+            embeds:[embed],
 
-channelId: interaction.channel.id,
+            components:[row]
 
-guildId: interaction.guild.id,
-
-prize: prize,
-
-endTime: endTime,
-
-entries: []
-
-});
+        });
 
 
 
-fs.writeFileSync(
+        let giveaways = [];
 
-filePath,
+        if(fs.existsSync(giveawayFile)){
 
-JSON.stringify(
-giveaways,
-null,
-2
-)
+            giveaways = JSON.parse(
 
-);
+                fs.readFileSync(
+                    giveawayFile,
+                    "utf8"
+                )
 
+            );
 
-
-await interaction.reply({
-
-content:"✅ Giveaway created and timer started!",
-
-ephemeral:true
-
-});
+        }
 
 
 
-}
+        giveaways.push({
+
+            messageId: message.id,
+
+            channelId: interaction.channel.id,
+
+            guildId: interaction.guild.id,
+
+            prize: prize,
+
+            endTime: endTime,
+
+            entries: [],
+
+            ended:false
+
+        });
+
+
+
+        fs.writeFileSync(
+
+            giveawayFile,
+
+            JSON.stringify(
+                giveaways,
+                null,
+                2
+            )
+
+        );
+
+
+
+        await interaction.reply({
+
+            content:
+            "✅ Giveaway created!",
+
+            ephemeral:true
+
+        });
+
+
+    }
 
 };
