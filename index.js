@@ -10,7 +10,6 @@ const {
 const config = require("./config");
 
 
-
 const client = new Client({
 
     intents: [
@@ -36,27 +35,31 @@ client.giveaways = [];
 
 
 // ================================
-// LOAD COMMANDS
+// COMMANDS
 // ================================
 
-const commandFiles = [
+const commands = [
 
     "./commands/panel",
     "./commands/vouchstats",
     "./commands/post",
     "./commands/embed",
-    "./commands/giveaway"
+    "./commands/giveaway",
+    "./commands/ticketpanel"
 
 ];
 
 
-for (const file of commandFiles) {
+for(const file of commands){
 
     const command = require(file);
 
     client.commands.set(
+
         command.data.name,
+
         command
+
     );
 
 }
@@ -64,24 +67,28 @@ for (const file of commandFiles) {
 
 
 // ================================
-// LOAD BUTTONS
+// BUTTONS
 // ================================
 
-const buttonFiles = [
+const buttons = [
 
     "./buttons/leave_vouch",
-    "./buttons/giveaway_enter"
+    "./buttons/giveaway_enter",
+    "./buttons/ticket_close"
 
 ];
 
 
-for (const file of buttonFiles) {
+for(const file of buttons){
 
     const button = require(file);
 
     client.buttons.set(
+
         button.customId,
+
         button
+
     );
 
 }
@@ -92,18 +99,26 @@ for (const file of buttonFiles) {
 // READY
 // ================================
 
-client.once("ready", () => {
-
-    console.log(
-        `💎 ${client.user.tag} is online`
-    );
+client.once("ready",()=>{
 
 
-    client.user.setActivity(
-        "Sinner Services V2 | Vouches"
-    );
+console.log(
+
+`💎 ${client.user.tag} is online`
+
+);
+
+
+
+client.user.setActivity(
+
+"Sinner Services V2 | Vouches"
+
+);
+
 
 });
+
 
 
 
@@ -112,78 +127,137 @@ client.once("ready", () => {
 // ================================
 
 client.on(
+
 "interactionCreate",
-async interaction => {
+
+async interaction=>{
 
 
-try {
+try{
 
 
-if(interaction.isChatInputCommand()) {
+// SLASH COMMANDS
+
+if(interaction.isChatInputCommand()){
 
 
-    const command =
-    client.commands.get(
-        interaction.commandName
-    );
+const command =
 
+client.commands.get(
 
-    if(command) {
+interaction.commandName
 
-        await command.execute(
-            interaction
-        );
-
-    }
-
-
-}
-
-
-
-if(interaction.isButton()) {
-
-
-    const button =
-    client.buttons.get(
-        interaction.customId
-    );
-
-
-    if(button) {
-
-        await button.execute(
-            interaction
-        );
-
-    }
-
-
-}
-
-
-
-}
-
-catch(error) {
-
-
-console.log(
-"Interaction Error:",
-error
 );
 
 
-if(!interaction.replied) {
 
-    await interaction.reply({
+if(command){
 
-        content:
-        "❌ Something went wrong.",
+await command.execute(
 
-        ephemeral:true
+interaction
 
-    }).catch(()=>{});
+);
+
+}
+
+
+}
+
+
+
+
+// BUTTONS
+
+if(interaction.isButton()){
+
+
+const button =
+
+client.buttons.get(
+
+interaction.customId
+
+);
+
+
+
+if(button){
+
+await button.execute(
+
+interaction
+
+);
+
+}
+
+
+}
+
+
+
+
+// DROPDOWN MENUS
+
+if(interaction.isStringSelectMenu()){
+
+
+if(
+
+interaction.customId === "ticket_select"
+
+){
+
+
+const menu =
+
+require("./menus/ticket_select");
+
+
+await menu.execute(
+
+interaction
+
+);
+
+
+}
+
+
+}
+
+
+
+}
+
+
+catch(error){
+
+
+console.log(
+
+"Interaction Error:",
+
+error
+
+);
+
+
+
+if(!interaction.replied){
+
+
+await interaction.reply({
+
+content:
+
+"❌ Something went wrong.",
+
+ephemeral:true
+
+}).catch(()=>{});
+
 
 }
 
@@ -197,102 +271,136 @@ if(!interaction.replied) {
 
 
 // ================================
-// GIVEAWAY AUTO END
+// GIVEAWAY TIMER
 // ================================
 
 setInterval(async()=>{
 
 
-for(const giveaway of client.giveaways) {
-
-
-    if(giveaway.ended)
-    continue;
-
-
-    if(Date.now() >= giveaway.endTime) {
-
-
-        giveaway.ended = true;
-
-
-        const channel =
-        await client.channels.fetch(
-            giveaway.channelId
-        ).catch(()=>null);
+for(const giveaway of client.giveaways){
 
 
 
-        if(!channel)
-        continue;
+if(giveaway.ended)
+
+continue;
 
 
 
-        let winner = "No entries";
-
-
-        if(giveaway.entries.length > 0) {
-
-
-            const id =
-            giveaway.entries[
-                Math.floor(
-                    Math.random() *
-                    giveaway.entries.length
-                )
-            ];
-
-
-            winner = `<@${id}>`;
-
-        }
+if(Date.now() >= giveaway.endTime){
 
 
 
-        const embed =
-        new EmbedBuilder()
+giveaway.ended = true;
 
-        .setColor("#B30000")
 
-        .setTitle(
-            "🎉 Giveaway Ended!"
-        )
 
-        .setDescription(
+const channel =
+
+await client.channels.fetch(
+
+giveaway.channelId
+
+).catch(()=>null);
+
+
+
+if(!channel)
+
+continue;
+
+
+
+let winner =
+
+"No entries";
+
+
+
+if(giveaway.entries.length > 0){
+
+
+const id =
+
+giveaway.entries[
+
+Math.floor(
+
+Math.random() *
+
+giveaway.entries.length
+
+)
+
+];
+
+
+
+winner =
+
+`<@${id}>`;
+
+
+}
+
+
+
+const embed =
+
+new EmbedBuilder()
+
+.setColor("#B30000")
+
+.setTitle(
+
+"🎉 Giveaway Ended!"
+
+)
+
+.setDescription(
+
 `
 🏆 **Winner**
+
 ${winner}
 
+
 🎁 **Prize**
+
 ${giveaway.prize}
 
+
 👥 **Entries**
+
 ${giveaway.entries.length}
+
 
 ━━━━━━━━━━━━━━
 
 Congratulations!
 `
-        )
 
-        .setFooter({
+)
 
-            text:
-            "Sinner Services"
+.setFooter({
 
-        });
+text:
 
+"Sinner Services"
 
-
-        await channel.send({
-
-            embeds:[embed]
-
-        });
+});
 
 
 
-    }
+await channel.send({
+
+embeds:[embed]
+
+});
+
+
+
+}
 
 
 }
@@ -304,9 +412,59 @@ Congratulations!
 
 
 // ================================
+// MESSAGE EVENTS
+// ================================
+
+client.on(
+
+"messageCreate",
+
+async message=>{
+
+
+try{
+
+
+const messageEvent =
+
+require("./events/messageCreate");
+
+
+await messageEvent.execute(
+
+message
+
+);
+
+
+}
+
+catch(error){
+
+
+console.log(
+
+"Message Error:",
+
+error
+
+);
+
+
+}
+
+
+});
+
+
+
+
+// ================================
 // LOGIN
 // ================================
 
 client.login(
-    config.TOKEN
+
+config.TOKEN
+
 );
