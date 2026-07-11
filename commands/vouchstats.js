@@ -22,7 +22,7 @@ new SlashCommandBuilder()
 .setName("vouchstats")
 
 .setDescription(
-"View Sinner Services review statistics"
+"View Sinner Services statistics"
 ),
 
 
@@ -54,8 +54,25 @@ fs.readFileSync(statsPath)
 
 
 const average =
-Number(stats.averageRating)
+Number(stats.averageRating || 0)
 .toFixed(1);
+
+
+
+let reputation =
+"Needs Improvement";
+
+
+if(average >= 4.5)
+reputation = "🔥 Excellent";
+
+
+else if(average >= 4)
+reputation = "⭐ Great";
+
+
+else if(average >= 3)
+reputation = "👍 Good";
 
 
 
@@ -74,12 +91,12 @@ config.COLORS.RED
 .setDescription(
 
 `
-📊 **Customer Review Statistics**
+⭐ **Customer Reviews**
 
 ━━━━━━━━━━━━━━━━
 
 
-⭐ **Total Vouches**
+📊 **Total Vouches**
 
 ${stats.totalVouches}
 
@@ -91,10 +108,7 @@ ${average}/5
 
 🏆 **Reputation**
 
-${average >= 4.5 ? "Excellent" :
-average >= 4 ? "Great" :
-average >= 3 ? "Good" :
-"Needs Improvement"}
+${reputation}
 
 
 ━━━━━━━━━━━━━━━━
@@ -106,14 +120,7 @@ average >= 3 ? "Good" :
 
 )
 
-.setTimestamp()
-
-.setFooter({
-
-text:
-"Trusted Customer Reviews"
-
-});
+.setTimestamp();
 
 
 
@@ -124,7 +131,6 @@ embed
 ]
 
 });
-
 
 
 }
