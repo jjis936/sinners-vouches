@@ -7,6 +7,10 @@ const {
 
 const config = require("../config");
 
+const {
+    createButtons
+} = require("../buttons/embed_buttons");
+
 
 module.exports = {
 
@@ -14,6 +18,7 @@ module.exports = {
 
         .setName("embed")
         .setDescription("Create a premium announcement embed")
+
 
         .addChannelOption(option =>
             option
@@ -23,6 +28,7 @@ module.exports = {
                 .setRequired(true)
         )
 
+
         .addStringOption(option =>
             option
                 .setName("title")
@@ -30,19 +36,22 @@ module.exports = {
                 .setRequired(true)
         )
 
+
         .addStringOption(option =>
             option
                 .setName("description")
-                .setDescription("Embed message")
+                .setDescription("Embed description")
                 .setRequired(true)
         )
+
 
         .addStringOption(option =>
             option
                 .setName("color")
-                .setDescription("Embed color (example: #B30000)")
+                .setDescription("Embed color")
                 .setRequired(false)
         )
+
 
         .addStringOption(option =>
             option
@@ -51,12 +60,14 @@ module.exports = {
                 .setRequired(false)
         )
 
+
         .addStringOption(option =>
             option
                 .setName("image")
                 .setDescription("Large image URL")
                 .setRequired(false)
         )
+
 
         .addStringOption(option =>
             option
@@ -65,10 +76,11 @@ module.exports = {
                 .setRequired(false)
         )
 
+
         .addStringOption(option =>
             option
                 .setName("mention")
-                .setDescription("Mention everyone/here (optional)")
+                .setDescription("Mention everyone or here")
                 .addChoices(
                     {
                         name:"Everyone",
@@ -78,6 +90,36 @@ module.exports = {
                         name:"Here",
                         value:"here"
                     }
+                )
+                .setRequired(false)
+        )
+
+
+        .addStringOption(option =>
+            option
+                .setName("button1")
+                .setDescription(
+                    "Example: Open Ticket|button|ticket"
+                )
+                .setRequired(false)
+        )
+
+
+        .addStringOption(option =>
+            option
+                .setName("button2")
+                .setDescription(
+                    "Example: Leave Vouch|button|leave_vouch"
+                )
+                .setRequired(false)
+        )
+
+
+        .addStringOption(option =>
+            option
+                .setName("button3")
+                .setDescription(
+                    "Example: Website|link|https://example.com"
                 )
                 .setRequired(false)
         ),
@@ -107,52 +149,91 @@ module.exports = {
 
 
         const channel =
-        interaction.options.getChannel("channel");
+        interaction.options.getChannel(
+            "channel"
+        );
 
 
         const title =
-        interaction.options.getString("title");
+        interaction.options.getString(
+            "title"
+        );
 
 
         const description =
-        interaction.options.getString("description");
+        interaction.options.getString(
+            "description"
+        );
 
 
         const color =
-        interaction.options.getString("color")
+        interaction.options.getString(
+            "color"
+        )
         ||
         config.COLORS.RED;
 
 
+
         const footer =
-        interaction.options.getString("footer");
+        interaction.options.getString(
+            "footer"
+        );
 
 
         const image =
-        interaction.options.getString("image");
+        interaction.options.getString(
+            "image"
+        );
 
 
         const thumbnail =
-        interaction.options.getString("thumbnail");
+        interaction.options.getString(
+            "thumbnail"
+        );
 
 
         const mention =
-        interaction.options.getString("mention");
+        interaction.options.getString(
+            "mention"
+        );
+
+
+
+        const buttons = [
+
+            interaction.options.getString(
+                "button1"
+            ),
+
+            interaction.options.getString(
+                "button2"
+            ),
+
+            interaction.options.getString(
+                "button3"
+            )
+
+        ].filter(Boolean);
 
 
 
         const embed =
         new EmbedBuilder()
 
+
         .setColor(color)
+
 
         .setTitle(
             `💎 ${title}`
         )
 
+
         .setDescription(
             description
         )
+
 
         .setTimestamp();
 
@@ -169,13 +250,11 @@ module.exports = {
         }
 
 
-
         if(image){
 
             embed.setImage(image);
 
         }
-
 
 
         if(thumbnail){
@@ -186,7 +265,7 @@ module.exports = {
 
 
 
-        let content = "";
+        let content = null;
 
 
 
@@ -205,13 +284,27 @@ module.exports = {
 
 
 
+        let components = [];
+
+
+
+        if(buttons.length > 0){
+
+            components.push(
+                createButtons(buttons)
+            );
+
+        }
+
+
+
         await channel.send({
 
-            content: content || null,
+            content,
 
-            embeds:[
-                embed
-            ]
+            embeds:[embed],
+
+            components
 
         });
 
@@ -220,7 +313,7 @@ module.exports = {
         await interaction.reply({
 
             content:
-            "✅ Premium embed posted!",
+            "✅ Premium embed with buttons posted!",
 
             ephemeral:true
 
@@ -228,6 +321,5 @@ module.exports = {
 
 
     }
-
 
 };
