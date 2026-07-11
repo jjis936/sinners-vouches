@@ -10,7 +10,7 @@ const config = require("./config");
 
 
 // ================================
-// CREATE CLIENT
+// CREATE BOT
 // ================================
 
 const client = new Client({
@@ -26,15 +26,16 @@ const client = new Client({
 
 
 // ================================
-// COMMAND SYSTEM
+// COMMANDS
 // ================================
 
 client.commands = new Collection();
 
 
-// Load Commands
+// Load panel command
 
-const panel = require("./commands/panel");
+const panel =
+require("./commands/panel");
 
 
 client.commands.set(
@@ -56,23 +57,9 @@ client.once("ready", () => {
     );
 
 
-    client.user.setPresence({
-
-        activities: [
-
-            {
-
-                name:
-                "Sinner Services V2 | Vouches"
-
-            }
-
-        ],
-
-        status:
-        "online"
-
-    });
+    client.user.setActivity(
+        "Sinner Services V2 | Vouches"
+    );
 
 
 });
@@ -80,7 +67,7 @@ client.once("ready", () => {
 
 
 // ================================
-// COMMAND HANDLER
+// INTERACTIONS
 // ================================
 
 client.on(
@@ -88,11 +75,13 @@ client.on(
 async interaction => {
 
 
-    // Slash commands
+
+    // Slash Commands
 
     if(
         interaction.isChatInputCommand()
     ){
+
 
         const command =
         client.commands.get(
@@ -113,24 +102,24 @@ async interaction => {
             );
 
 
-        }
-
-
-        catch(error){
+        } catch(error){
 
 
             console.log(error);
 
 
+            if(!interaction.replied){
 
-            await interaction.reply({
+                await interaction.reply({
 
-                content:
-                "❌ Command error.",
+                    content:
+                    "❌ Something went wrong.",
 
-                ephemeral:true
+                    ephemeral:true
 
-            });
+                });
+
+            }
 
 
         }
@@ -140,18 +129,28 @@ async interaction => {
 
 
 
-    // Buttons will go here later
-
+    // Buttons
 
     if(
         interaction.isButton()
     ){
 
 
-        console.log(
-            "Button clicked:",
-            interaction.customId
-        );
+        if(
+            interaction.customId === "leave_vouch"
+        ){
+
+
+            const button =
+            require("./buttons/leave_vouch");
+
+
+            await button.execute(
+                interaction
+            );
+
+
+        }
 
 
     }
