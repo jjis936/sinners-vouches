@@ -7,42 +7,31 @@ const {
 } = require("discord.js");
 
 
+console.log("CLIENT_ID:", process.env.CLIENT_ID);
+console.log("GUILD_ID:", process.env.GUILD_ID);
+
+
 
 const commands = [
 
 
 new SlashCommandBuilder()
-
 .setName("panel")
-
-.setDescription(
-"Create the Sinner Services vouch panel"
-)
-
+.setDescription("Create the Sinner Services vouch panel")
 .toJSON(),
 
 
 
 new SlashCommandBuilder()
-
 .setName("vouchstats")
-
-.setDescription(
-"View Sinner Services statistics"
-)
-
+.setDescription("View Sinner Services statistics")
 .toJSON(),
 
 
 
 new SlashCommandBuilder()
-
 .setName("leaderboard")
-
-.setDescription(
-"View top customers"
-)
-
+.setDescription("View top customers")
 .toJSON()
 
 
@@ -52,7 +41,7 @@ new SlashCommandBuilder()
 
 const rest = new REST({
 
-    version:"10"
+version:"10"
 
 }).setToken(
 process.env.TOKEN
@@ -84,7 +73,7 @@ process.env.GUILD_ID
 
 {
 
-body: commands
+body:commands
 
 }
 
@@ -100,12 +89,9 @@ console.log(
 
 }
 
-
 catch(error){
 
-
 console.log(error);
-
 
 }
 
