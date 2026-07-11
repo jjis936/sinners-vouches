@@ -8,93 +8,68 @@ const fs = require("fs");
 const config = require("../config");
 
 
-const statsPath =
-"./database/settings.json";
-
-
 module.exports = {
 
 
-data:
+    data: new SlashCommandBuilder()
 
-new SlashCommandBuilder()
+        .setName("vouchstats")
 
-.setName("vouchstats")
-
-.setDescription(
-"View Sinner Services statistics"
-),
+        .setDescription(
+            "View Sinner Services vouch statistics"
+        ),
 
 
 
-async execute(interaction){
+    async execute(interaction){
 
 
-let stats = {
-
-totalVouches:0,
-
-averageRating:0
-
-};
+        const statsPath =
+        "./database/settings.json";
 
 
 
-if(fs.existsSync(statsPath)){
+        let stats = {
 
+            totalVouches: 0,
 
-stats =
-JSON.parse(
-fs.readFileSync(statsPath)
-);
+            averageRating: 0
 
-
-}
+        };
 
 
 
-const average =
-Number(stats.averageRating || 0)
-.toFixed(1);
+        if(fs.existsSync(statsPath)){
+
+            stats = JSON.parse(
+                fs.readFileSync(statsPath)
+            );
+
+        }
 
 
 
-let reputation =
-"Needs Improvement";
-
-
-if(average >= 4.5)
-reputation = "🔥 Excellent";
-
-
-else if(average >= 4)
-reputation = "⭐ Great";
-
-
-else if(average >= 3)
-reputation = "👍 Good";
+        const average =
+        Number(stats.averageRating || 0)
+        .toFixed(1);
 
 
 
-const embed =
+        const embed =
+        new EmbedBuilder()
 
-new EmbedBuilder()
+        .setColor(
+            config.COLORS.RED
+        )
 
-.setColor(
-config.COLORS.RED
-)
+        .setTitle(
+            "💎 SINNER SERVICES STATS"
+        )
 
-.setTitle(
-"💎 SINNER SERVICES STATS"
-)
-
-.setDescription(
+        .setDescription(
 
 `
-⭐ **Customer Reviews**
-
 ━━━━━━━━━━━━━━━━
-
 
 📊 **Total Vouches**
 
@@ -108,31 +83,41 @@ ${average}/5
 
 🏆 **Reputation**
 
-${reputation}
+${average >= 4.5 ? "Excellent ⭐⭐⭐⭐⭐" : "Growing ⭐⭐⭐⭐"}
 
 
 ━━━━━━━━━━━━━━━━
 
+💎 **Sinner Services**
 
-💎 Sinner Services
+Trusted Reviews • Premium Service
 
 `
 
-)
+        )
 
-.setTimestamp();
+        .setTimestamp()
 
+        .setFooter({
 
+            text:
+            "Sinner Services • Statistics"
 
-await interaction.reply({
-
-embeds:[
-embed
-]
-
-});
+        });
 
 
-}
+
+        await interaction.reply({
+
+            embeds:[
+                embed
+            ]
+
+        });
+
+
+
+    }
+
 
 };
