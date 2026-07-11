@@ -32,8 +32,6 @@ const client = new Client({
 client.commands = new Collection();
 
 
-// Load panel command
-
 const panel =
 require("./commands/panel");
 
@@ -76,7 +74,10 @@ async interaction => {
 
 
 
-    // Slash Commands
+    // ============================
+    // SLASH COMMANDS
+    // ============================
+
 
     if(
         interaction.isChatInputCommand()
@@ -93,7 +94,6 @@ async interaction => {
             return;
 
 
-
         try {
 
 
@@ -102,24 +102,12 @@ async interaction => {
             );
 
 
-        } catch(error){
+        }
+
+        catch(error){
 
 
             console.log(error);
-
-
-            if(!interaction.replied){
-
-                await interaction.reply({
-
-                    content:
-                    "❌ Something went wrong.",
-
-                    ephemeral:true
-
-                });
-
-            }
 
 
         }
@@ -129,7 +117,10 @@ async interaction => {
 
 
 
-    // Buttons
+    // ============================
+    // BUTTONS
+    // ============================
+
 
     if(
         interaction.isButton()
@@ -146,6 +137,37 @@ async interaction => {
 
 
             await button.execute(
+                interaction
+            );
+
+
+        }
+
+
+    }
+
+
+
+    // ============================
+    // MODALS
+    // ============================
+
+
+    if(
+        interaction.isModalSubmit()
+    ){
+
+
+        if(
+            interaction.customId === "vouch_form"
+        ){
+
+
+            const modal =
+            require("./modals/vouch_form");
+
+
+            await modal.execute(
                 interaction
             );
 
