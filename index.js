@@ -11,12 +11,10 @@ const config = require("./config");
 
 const client = new Client({
 
-    intents: [
+    intents:[
 
         GatewayIntentBits.Guilds,
-
         GatewayIntentBits.GuildMessages,
-
         GatewayIntentBits.MessageContent
 
     ]
@@ -26,14 +24,12 @@ const client = new Client({
 
 
 // ================================
-// COMMAND COLLECTION
+// COMMANDS
 // ================================
 
 client.commands = new Collection();
 
 
-
-// Load Commands
 
 const panel =
 require("./commands/panel");
@@ -43,54 +39,63 @@ const vouchstats =
 require("./commands/vouchstats");
 
 
+const leaderboard =
+require("./commands/leaderboard");
+
+
 
 client.commands.set(
-    panel.data.name,
-    panel
+panel.data.name,
+panel
 );
 
 
 client.commands.set(
-    vouchstats.data.name,
-    vouchstats
+vouchstats.data.name,
+vouchstats
+);
+
+
+client.commands.set(
+leaderboard.data.name,
+leaderboard
 );
 
 
 
 // ================================
-// MESSAGE EVENT
+// MESSAGE EVENTS
 // ================================
 
 const messageEvent =
 require("./events/messageCreate");
 
 
+
 client.on(
 "messageCreate",
-async message => {
+async message=>{
 
 
-    try {
+try{
 
 
-        await messageEvent.execute(
-            message
-        );
+await messageEvent.execute(
+message
+);
 
 
-    }
+}
+
+catch(error){
+
+console.log(
+"Message Error:",
+error
+);
 
 
-    catch(error){
-
-
-        console.log(
-            "Message Event Error:",
-            error
-        );
-
-
-    }
+}
 
 
 });
@@ -98,7 +103,7 @@ async message => {
 
 
 // ================================
-// BOT READY
+// READY
 // ================================
 
 client.once(
@@ -119,19 +124,16 @@ activities:[
 {
 
 name:
-"Sinner Services V2 | Vouches"
+"Sinner Services V2 | Reviews"
 
 }
 
 ],
 
-
 status:
 "online"
 
-
 });
-
 
 
 });
@@ -144,16 +146,13 @@ status:
 
 client.on(
 "interactionCreate",
-async interaction => {
+async interaction=>{
 
 
 try{
 
 
-// ----------------
 // SLASH COMMANDS
-// ----------------
-
 
 if(
 interaction.isChatInputCommand()
@@ -177,16 +176,11 @@ interaction
 );
 
 
-
 }
 
 
 
-
-// ----------------
 // BUTTONS
-// ----------------
-
 
 if(
 interaction.isButton()
@@ -202,26 +196,19 @@ const button =
 require("./buttons/leave_vouch");
 
 
-
 await button.execute(
 interaction
 );
 
 
+}
+
 
 }
 
 
 
-}
-
-
-
-
-// ----------------
 // MODALS
-// ----------------
-
 
 if(
 interaction.isModalSubmit()
@@ -237,15 +224,12 @@ const modal =
 require("./modals/vouch_form");
 
 
-
 await modal.execute(
 interaction
 );
 
 
-
 }
-
 
 
 }
@@ -274,7 +258,7 @@ if(
 await interaction.reply({
 
 content:
-"❌ Something went wrong. Please try again.",
+"❌ Something went wrong.",
 
 ephemeral:true
 
@@ -284,8 +268,8 @@ ephemeral:true
 }
 
 
-
 }
+
 
 
 });
