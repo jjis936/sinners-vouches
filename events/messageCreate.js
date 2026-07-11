@@ -1,3 +1,5 @@
+const fs = require("fs");
+
 const {
     EmbedBuilder
 } = require("discord.js");
@@ -5,7 +7,13 @@ const {
 const config = require("../config");
 
 
+const path =
+"./database/vouches.json";
+
+
+
 module.exports = {
+
 
 async execute(message){
 
@@ -14,17 +22,55 @@ async execute(message){
         return;
 
 
+
+    // No attachment = ignore
+
     if(message.attachments.size === 0)
         return;
 
 
 
-    // ONLY watch channels named proof
+    let data = {};
 
-    if(
-        !message.channel.name.includes("proof")
-    )
+
+
+    if(fs.existsSync(path)){
+
+        data = JSON.parse(
+            fs.readFileSync(path)
+        );
+
+    }
+
+
+
+    const userVouch =
+    data[message.author.id];
+
+
+
+    // User has no pending vouch
+
+    if(!userVouch)
         return;
+
+
+
+
+    const proof =
+    message.attachments.first();
+
+
+
+
+    const stars =
+    "⭐".repeat(
+        Math.min(
+            Number(userVouch.rating),
+            5
+        )
+    );
+
 
 
 
@@ -36,19 +82,45 @@ async execute(message){
     )
 
     .setTitle(
-        "💎 NEW CUSTOMER PROOF"
+        "💎 NEW CUSTOMER REVIEW"
     )
 
     .setDescription(
+
 `
-👤 Customer
+👤 **Customer**
 
 ${message.author}
 
 
-📸 Proof Submitted
+━━━━━━━━━━━━━━━━
 
-Thank you for providing proof.
+
+⭐ **Rating**
+
+${stars}
+
+
+🎮 **Service Used**
+
+${userVouch.service}
+
+
+💬 **Feedback**
+
+${userVouch.feedback}
+
+
+📸 **Proof**
+
+Attached below
+
+
+━━━━━━━━━━━━━━━━
+
+
+💎 **Sinner Services**
+
 `
 
     )
@@ -57,30 +129,59 @@ Thank you for providing proof.
 
 
 
-    const vouchChannel =
+    const channel =
     message.guild.channels.cache.get(
         config.VOUCH_CHANNEL_ID
     );
 
 
 
-    if(vouchChannel){
+    if(channel){
 
 
-        await vouchChannel.send({
+        await channel.send({
 
             embeds:[
                 embed
             ],
 
             files:[
-                ...message.attachments.values()
+                proof.url
             ]
 
         });
 
 
     }
+
+
+
+
+    // Delete proof message
+
+    await message.delete()
+    .catch(()=>{});
+
+
+
+
+    // Remove saved vouch
+
+    delete data[message.author.id];
+
+
+    fs.writeFileSync(
+
+        path,
+
+        JSON.stringify(
+            data,
+            null,
+            2
+        )
+
+    );
+
 
 
 }
