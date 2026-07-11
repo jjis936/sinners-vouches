@@ -1,6 +1,18 @@
 const fs = require("fs");
 
-const path = "./database/vouches.json";
+
+const path =
+"./database/vouches.json";
+
+
+const cooldownPath =
+"./database/cooldowns.json";
+
+
+
+const COOLDOWN_TIME =
+30 * 60 * 1000; // 30 minutes
+
 
 
 module.exports = {
@@ -9,89 +21,185 @@ module.exports = {
 customId: "vouch_form",
 
 
+
 async execute(interaction){
 
 
+
+let cooldowns = {};
+
+
+
+if(fs.existsSync(cooldownPath)){
+
+
+    cooldowns = JSON.parse(
+
+        fs.readFileSync(
+            cooldownPath
+        )
+
+    );
+
+
+}
+
+
+
+const userID =
+interaction.user.id;
+
+
+
+// ================================
+// CHECK COOLDOWN
+// ================================
+
+
+if(cooldowns[userID]){
+
+
+    const timePassed =
+    Date.now() -
+    cooldowns[userID];
+
+
+
+    const remaining =
+    COOLDOWN_TIME -
+    timePassed;
+
+
+
+    if(remaining > 0){
+
+
+        const minutes =
+        Math.ceil(
+            remaining / 60000
+        );
+
+
+
+        return interaction.reply({
+
+            content:
+            `⏰ You already submitted a vouch. Please wait ${minutes} minutes before submitting another.`,
+
+            ephemeral:true
+
+        });
+
+
+    }
+
+
+}
+
+
+
+// ================================
+// SAVE VOUCH DATA
+// ================================
+
+
 const rating =
-interaction.fields.getTextInputValue("rating");
+interaction.fields.getTextInputValue(
+"rating"
+);
+
 
 
 const feedback =
-interaction.fields.getTextInputValue("feedback");
+interaction.fields.getTextInputValue(
+"feedback"
+);
+
 
 
 const service =
-interaction.fields.getTextInputValue("service");
+interaction.fields.getTextInputValue(
+"service"
+);
 
 
 
-const number =
-Number(rating);
 
-
+// Validation
 
 if(
-number < 1 ||
-number > 5 ||
-isNaN(number)
+Number(rating) < 1 ||
+Number(rating) > 5
 ){
+
 
 return interaction.reply({
 
 content:
-"❌ Rating must be between 1 and 5.",
+"❌ Rating must be between 1-5.",
 
 ephemeral:true
 
 });
+
+
+}
+
+
+
+if(feedback.length < 5){
+
+
+return interaction.reply({
+
+content:
+"❌ Please provide more feedback.",
+
+ephemeral:true
+
+});
+
 
 }
 
 
 
 
-let data = {};
+
+let vouches = {};
 
 
 
 if(fs.existsSync(path)){
 
-data =
+
+vouches =
 JSON.parse(
+
 fs.readFileSync(path)
+
 );
 
-}
-
-
-
-if(data[interaction.user.id]){
-
-
-return interaction.reply({
-
-content:
-"⚠️ You already have a pending vouch.",
-
-ephemeral:true
-
-});
-
 
 }
 
 
 
-data[interaction.user.id] = {
+vouches[userID] = {
 
 
-rating:number,
+rating,
 
-feedback:feedback,
+feedback,
 
-service:service,
+service,
 
-created:Date.now()
+username:
+interaction.user.username,
+
+
+time:
+Date.now()
 
 
 };
@@ -103,24 +211,56 @@ fs.writeFileSync(
 path,
 
 JSON.stringify(
-data,
+
+vouches,
+
 null,
+
 2
+
 )
 
 );
 
 
 
+
+// Save cooldown
+
+cooldowns[userID] =
+Date.now();
+
+
+
+fs.writeFileSync(
+
+cooldownPath,
+
+JSON.stringify(
+
+cooldowns,
+
+null,
+
+2
+
+)
+
+);
+
+
+
+
+
 await interaction.reply({
 
 content:
-
-"✅ Review saved!\n\n📸 Please upload your proof screenshot/video.",
+"✅ Vouch saved!\n\n📸 Now upload your proof image/video.",
 
 ephemeral:true
 
 });
+
 
 
 }
