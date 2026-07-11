@@ -7,68 +7,67 @@ const config = require("../config");
 
 module.exports = {
 
-    async execute(message) {
+async execute(message){
 
 
-        if(message.author.bot)
-            return;
+    if(message.author.bot)
+        return;
 
 
-        // Only continue if there is an upload
-
-        if(message.attachments.size === 0)
-            return;
+    if(message.attachments.size === 0)
+        return;
 
 
 
-        const embed = new EmbedBuilder()
+    // ONLY watch channels named proof
 
-        .setColor(
-            config.COLORS.RED
-        )
+    if(
+        !message.channel.name.includes("proof")
+    )
+        return;
 
-        .setTitle(
-            "📸 Proof Received"
-        )
 
-        .setDescription(
+
+    const embed =
+    new EmbedBuilder()
+
+    .setColor(
+        config.COLORS.RED
+    )
+
+    .setTitle(
+        "💎 NEW CUSTOMER PROOF"
+    )
+
+    .setDescription(
 `
-👤 **Customer**
+👤 Customer
 
 ${message.author}
 
 
-📎 **Uploaded Files**
+📸 Proof Submitted
 
-Your proof has been received.
+Thank you for providing proof.
 `
 
-        )
+    )
 
-        .setTimestamp()
-
-        .setFooter({
-
-            text:
-            "Sinner Services • Proof System"
-
-        });
+    .setTimestamp();
 
 
 
-        const channel =
-        message.guild.channels.cache.get(
-            config.VOUCH_CHANNEL_ID
-        );
+    const vouchChannel =
+    message.guild.channels.cache.get(
+        config.VOUCH_CHANNEL_ID
+    );
 
 
 
-        if(!channel)
-            return;
+    if(vouchChannel){
 
 
-
-        await channel.send({
+        await vouchChannel.send({
 
             embeds:[
                 embed
@@ -82,5 +81,8 @@ Your proof has been received.
 
 
     }
+
+
+}
 
 };
