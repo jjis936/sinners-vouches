@@ -1,15 +1,27 @@
 const {
     SlashCommandBuilder,
     EmbedBuilder,
-    PermissionFlagsBits
+    PermissionFlagsBits,
+    ChannelType
 } = require("discord.js");
+
+const config = require("../config");
+
 
 module.exports = {
 
     data: new SlashCommandBuilder()
 
         .setName("embed")
-        .setDescription("Create a premium embed")
+        .setDescription("Create a premium announcement embed")
+
+        .addChannelOption(option =>
+            option
+                .setName("channel")
+                .setDescription("Channel to send the embed")
+                .addChannelTypes(ChannelType.GuildText)
+                .setRequired(true)
+        )
 
         .addStringOption(option =>
             option
@@ -21,14 +33,14 @@ module.exports = {
         .addStringOption(option =>
             option
                 .setName("description")
-                .setDescription("Embed description")
+                .setDescription("Embed message")
                 .setRequired(true)
         )
 
         .addStringOption(option =>
             option
                 .setName("color")
-                .setDescription("Embed color (hex)")
+                .setDescription("Embed color (example: #B30000)")
                 .setRequired(false)
         )
 
@@ -42,7 +54,7 @@ module.exports = {
         .addStringOption(option =>
             option
                 .setName("image")
-                .setDescription("Image URL")
+                .setDescription("Large image URL")
                 .setRequired(false)
         )
 
@@ -51,11 +63,29 @@ module.exports = {
                 .setName("thumbnail")
                 .setDescription("Thumbnail URL")
                 .setRequired(false)
+        )
+
+        .addStringOption(option =>
+            option
+                .setName("mention")
+                .setDescription("Mention everyone/here (optional)")
+                .addChoices(
+                    {
+                        name:"Everyone",
+                        value:"everyone"
+                    },
+                    {
+                        name:"Here",
+                        value:"here"
+                    }
+                )
+                .setRequired(false)
         ),
 
 
 
     async execute(interaction){
+
 
         if(
             !interaction.member.permissions.has(
@@ -66,7 +96,7 @@ module.exports = {
             return interaction.reply({
 
                 content:
-                "❌ You don't have permission.",
+                "❌ You need Manage Messages permission.",
 
                 ephemeral:true
 
@@ -76,24 +106,38 @@ module.exports = {
 
 
 
+        const channel =
+        interaction.options.getChannel("channel");
+
+
         const title =
         interaction.options.getString("title");
+
 
         const description =
         interaction.options.getString("description");
 
+
         const color =
-        interaction.options.getString("color") ||
-        "#B30000";
+        interaction.options.getString("color")
+        ||
+        config.COLORS.RED;
+
 
         const footer =
         interaction.options.getString("footer");
 
+
         const image =
         interaction.options.getString("image");
 
+
         const thumbnail =
         interaction.options.getString("thumbnail");
+
+
+        const mention =
+        interaction.options.getString("mention");
 
 
 
@@ -102,9 +146,13 @@ module.exports = {
 
         .setColor(color)
 
-        .setTitle(`💎 ${title}`)
+        .setTitle(
+            `💎 ${title}`
+        )
 
-        .setDescription(description)
+        .setDescription(
+            description
+        )
 
         .setTimestamp();
 
@@ -114,7 +162,7 @@ module.exports = {
 
             embed.setFooter({
 
-                text:footer
+                text: footer
 
             });
 
@@ -138,9 +186,32 @@ module.exports = {
 
 
 
-        await interaction.channel.send({
+        let content = "";
 
-            embeds:[embed]
+
+
+        if(mention === "everyone"){
+
+            content = "@everyone";
+
+        }
+
+
+        if(mention === "here"){
+
+            content = "@here";
+
+        }
+
+
+
+        await channel.send({
+
+            content: content || null,
+
+            embeds:[
+                embed
+            ]
 
         });
 
@@ -149,12 +220,14 @@ module.exports = {
         await interaction.reply({
 
             content:
-            "✅ Embed posted!",
+            "✅ Premium embed posted!",
 
             ephemeral:true
 
         });
 
+
     }
+
 
 };
