@@ -8,26 +8,17 @@ const {
 
 const config = require("./config");
 
-
 // ================================
 // CREATE BOT
 // ================================
 
 const client = new Client({
-
     intents: [
-
         GatewayIntentBits.Guilds,
-
         GatewayIntentBits.GuildMessages,
-
         GatewayIntentBits.MessageContent
-
     ]
-
 });
-
-
 
 // ================================
 // COMMAND SYSTEM
@@ -35,77 +26,35 @@ const client = new Client({
 
 client.commands = new Collection();
 
+const panel = require("./commands/panel");
+const vouchstats = require("./commands/vouchstats");
+const post = require("./commands/post");
+const embed = require("./commands/embed");
 
-
-// Panel
-
-const panel =
-require("./commands/panel");
-
-client.commands.set(
-    panel.data.name,
-    panel
-);
-
-
-
-// Vouch Stats
-
-const vouchstats =
-require("./commands/vouchstats");
-
-client.commands.set(
-    vouchstats.data.name,
-    vouchstats
-);
-
-
-
-// Post Command
-
-const post =
-require("./commands/post");
-
-client.commands.set(
-    post.data.name,
-    post
-);
-
-
-
+client.commands.set(panel.data.name, panel);
+client.commands.set(vouchstats.data.name, vouchstats);
+client.commands.set(post.data.name, post);
+client.commands.set(embed.data.name, embed);
 
 // ================================
 // MESSAGE EVENTS
 // ================================
 
-const messageEvent =
-require("./events/messageCreate");
+const messageEvent = require("./events/messageCreate");
 
+client.on("messageCreate", async (message) => {
 
-client.on(
-    "messageCreate",
-    async message => {
+    try {
 
-        try {
+        await messageEvent.execute(message);
 
-            await messageEvent.execute(
-                message
-            );
+    } catch (error) {
 
-        } catch(error){
-
-            console.log(
-                "Message Error:",
-                error
-            );
-
-        }
+        console.log("Message Error:", error);
 
     }
-);
 
-
-
+});
 
 // ================================
 // READY
@@ -113,159 +62,73 @@ client.on(
 
 client.once("ready", () => {
 
+    console.log(`💎 ${client.user.tag} is online`);
 
-    console.log(
-        `💎 ${client.user.tag} is online`
-    );
-
-
-    client.user.setActivity(
-        "Sinner Services V2 | Vouches"
-    );
-
+    client.user.setActivity("Sinner Services V2 | Vouches");
 
 });
-
-
-
 
 // ================================
 // INTERACTIONS
 // ================================
 
-client.on(
-"interactionCreate",
-async interaction => {
+client.on("interactionCreate", async (interaction) => {
 
+    try {
 
-try {
+        if (interaction.isChatInputCommand()) {
 
+            const command = client.commands.get(interaction.commandName);
 
-    // Slash Commands
+            if (!command) return;
 
-    if(
-        interaction.isChatInputCommand()
-    ){
-
-
-        const command =
-        client.commands.get(
-            interaction.commandName
-        );
-
-
-        if(!command)
-            return;
-
-
-
-        await command.execute(
-            interaction
-        );
-
-
-    }
-
-
-
-    // Buttons
-
-    if(
-        interaction.isButton()
-    ){
-
-
-        if(
-            interaction.customId === "leave_vouch"
-        ){
-
-
-            const button =
-            require("./buttons/leave_vouch");
-
-
-            await button.execute(
-                interaction
-            );
-
+            await command.execute(interaction);
 
         }
 
+        if (interaction.isButton()) {
 
-    }
+            if (interaction.customId === "leave_vouch") {
 
+                const button = require("./buttons/leave_vouch");
 
+                await button.execute(interaction);
 
-
-    // Modals
-
-    if(
-        interaction.isModalSubmit()
-    ){
-
-
-        if(
-            interaction.customId === "vouch_form"
-        ){
-
-
-            const modal =
-            require("./modals/vouch_form");
-
-
-            await modal.execute(
-                interaction
-            );
-
+            }
 
         }
 
+        if (interaction.isModalSubmit()) {
+
+            if (interaction.customId === "vouch_form") {
+
+                const modal = require("./modals/vouch_form");
+
+                await modal.execute(interaction);
+
+            }
+
+        }
+
+    } catch (error) {
+
+        console.log("Interaction Error:", error);
+
+        if (!interaction.replied && !interaction.deferred) {
+
+            await interaction.reply({
+                content: "❌ Something went wrong.",
+                ephemeral: true
+            });
+
+        }
 
     }
-
-
-
-}
-
-
-catch(error){
-
-
-    console.log(
-        "Interaction Error:",
-        error
-    );
-
-
-
-    if(!interaction.replied){
-
-
-        await interaction.reply({
-
-            content:
-            "❌ Something went wrong.",
-
-            ephemeral:true
-
-        });
-
-
-    }
-
-
-}
-
 
 });
-
-
-
 
 // ================================
 // LOGIN
 // ================================
 
-client.login(
-    config.TOKEN
-);
+client.login(config.TOKEN);
