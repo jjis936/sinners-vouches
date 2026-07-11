@@ -2,124 +2,83 @@ module.exports = {
 
     customId: "giveaway_enter",
 
+    async execute(interaction) {
 
-    async execute(interaction){
+        if (!interaction.client.giveaways) {
 
-
-        const giveaways =
-        interaction.client.giveaways;
-
-
-
-        if(!giveaways){
-
-            return interaction.reply({
-
-                content:
-                "❌ No active giveaways.",
-
-                ephemeral:true
-
-            });
+            interaction.client.giveaways = [];
 
         }
 
 
-
-        const giveaway =
-        giveaways.find(
-
+        const giveaway = 
+        interaction.client.giveaways.find(
             g => g.messageId === interaction.message.id
-
         );
 
 
+        if (!giveaway) {
 
-        if(!giveaway){
-
+            console.log("Active giveaways:", interaction.client.giveaways);
 
             return interaction.reply({
 
-                content:
-                "❌ This giveaway no longer exists.",
+                content: "❌ Giveaway not found. Restart the giveaway after restarting the bot.",
 
-                ephemeral:true
+                ephemeral: true
 
             });
-
 
         }
 
 
 
-        if(giveaway.ended){
-
+        if (giveaway.ended) {
 
             return interaction.reply({
 
-                content:
-                "❌ This giveaway has ended.",
+                content: "❌ This giveaway has ended.",
 
-                ephemeral:true
+                ephemeral: true
 
             });
-
 
         }
 
 
 
-        if(
-
-            giveaway.entries.includes(
-
-                interaction.user.id
-
-            )
-
-        ){
-
+        if (giveaway.entries.includes(interaction.user.id)) {
 
             return interaction.reply({
 
-                content:
-                "❌ You already entered!",
+                content: "❌ You already entered!",
 
-                ephemeral:true
+                ephemeral: true
 
             });
-
 
         }
 
 
 
-        giveaway.entries.push(
-
-            interaction.user.id
-
-        );
+        giveaway.entries.push(interaction.user.id);
 
 
 
         await interaction.reply({
 
-            content:
-            "🎉 You entered the giveaway!",
+            content: "🎉 You entered the giveaway!",
 
-            ephemeral:true
+            ephemeral: true
 
         });
 
 
 
-        const embed =
-        interaction.message.embeds[0].data;
+        const embed = interaction.message.embeds[0].data;
 
 
-
-        embed.description =
-        embed.description.replace(
+        embed.description = embed.description.replace(
 
             /👥 \*\*Entries\*\*\n\d+/,
 
@@ -131,7 +90,7 @@ module.exports = {
 
         await interaction.message.edit({
 
-            embeds:[embed]
+            embeds: [embed]
 
         });
 
