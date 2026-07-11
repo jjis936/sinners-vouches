@@ -2,6 +2,21 @@ require("dotenv").config();
 
 const { REST, Routes } = require("discord.js");
 
+
+// ================================
+// IDS
+// ================================
+
+const CLIENT_ID = "1525205213827436635";
+
+const GUILD_ID = "1500601982740856875";
+
+
+
+// ================================
+// COMMANDS
+// ================================
+
 const commands = [
 
     require("./commands/panel").data.toJSON(),
@@ -19,6 +34,11 @@ const commands = [
 ];
 
 
+
+// ================================
+// REST
+// ================================
+
 const rest = new REST({
 
     version:"10"
@@ -27,24 +47,31 @@ const rest = new REST({
 
 
 
+
+// ================================
+// DEPLOY
+// ================================
+
 (async()=>{
 
 
 try{
 
 
-console.log("⏳ Deploying Sinner Services commands...");
+console.log(
+"⏳ Deploying Sinner Services commands..."
+);
 
 
 console.log(
 "Client ID:",
-process.env.CLIENT_ID
+CLIENT_ID
 );
 
 
 console.log(
 "Guild ID:",
-process.env.GUILD_ID
+GUILD_ID
 );
 
 
@@ -53,9 +80,9 @@ await rest.put(
 
 Routes.applicationGuildCommands(
 
-process.env.CLIENT_ID,
+CLIENT_ID,
 
-process.env.GUILD_ID
+GUILD_ID
 
 ),
 
@@ -79,11 +106,14 @@ console.log(
 
 catch(error){
 
-console.error(
+
+console.log(
 "❌ Deploy Error:"
 );
 
+
 console.error(error);
+
 
 }
 
