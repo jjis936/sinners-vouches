@@ -1,15 +1,7 @@
-const { 
-  Client, 
-  GatewayIntentBits, 
-  REST, 
-  Routes, 
-  SlashCommandBuilder 
-} = require("discord.js");
+const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require("discord.js");
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds
-  ]
+  intents: [GatewayIntentBits.Guilds]
 });
 
 const commands = [
@@ -21,7 +13,7 @@ const commands = [
 
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
-client.once("clientReady", async () => {
+client.once("ready", async () => {
   console.log(`✅ ${client.user.tag} is online!`);
 
   await rest.put(
@@ -30,6 +22,19 @@ client.once("clientReady", async () => {
   );
 
   console.log("✅ Commands loaded!");
+});
+
+client.on("interactionCreate", async interaction => {
+  console.log("Interaction received");
+
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === "panel") {
+    await interaction.reply({
+      content: "📝 Sinner Services Vouch System is working!",
+      ephemeral: false
+    });
+  }
 });
 
 client.login(process.env.TOKEN);
