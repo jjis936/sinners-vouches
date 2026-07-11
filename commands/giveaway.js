@@ -7,38 +7,27 @@ const {
     PermissionFlagsBits
 } = require("discord.js");
 
-const fs = require("fs");
-const path = require("path");
-
-
-const giveawayFile = path.join(
-    __dirname,
-    "../data/giveaways.json"
-);
-
-
 
 module.exports = {
 
     data: new SlashCommandBuilder()
 
-    .setName("giveaway")
+        .setName("giveaway")
+        .setDescription("Create a giveaway")
 
-    .setDescription("Create an automatic giveaway")
+        .addStringOption(option =>
+            option
+                .setName("prize")
+                .setDescription("Giveaway prize")
+                .setRequired(true)
+        )
 
-    .addStringOption(option =>
-        option
-        .setName("prize")
-        .setDescription("Giveaway prize")
-        .setRequired(true)
-    )
-
-    .addIntegerOption(option =>
-        option
-        .setName("duration")
-        .setDescription("Duration in minutes")
-        .setRequired(true)
-    ),
+        .addIntegerOption(option =>
+            option
+                .setName("minutes")
+                .setDescription("How many minutes until it ends")
+                .setRequired(true)
+        ),
 
 
 
@@ -68,13 +57,13 @@ module.exports = {
         interaction.options.getString("prize");
 
 
-        const duration =
-        interaction.options.getInteger("duration");
+        const minutes =
+        interaction.options.getInteger("minutes");
 
 
 
         const endTime =
-        Date.now() + (duration * 60000);
+        Date.now() + (minutes * 60000);
 
 
 
@@ -98,7 +87,7 @@ ${prize}
 
 ━━━━━━━━━━━━━━
 
-Click the button below to enter!
+Click below to enter!
 `
         )
 
@@ -141,24 +130,17 @@ Click the button below to enter!
 
 
 
-        let giveaways = [];
+        // Store giveaway in bot memory
 
-        if(fs.existsSync(giveawayFile)){
+        if(!interaction.client.giveaways){
 
-            giveaways = JSON.parse(
-
-                fs.readFileSync(
-                    giveawayFile,
-                    "utf8"
-                )
-
-            );
+            interaction.client.giveaways = [];
 
         }
 
 
 
-        giveaways.push({
+        interaction.client.giveaways.push({
 
             messageId: message.id,
 
@@ -175,20 +157,6 @@ Click the button below to enter!
             ended:false
 
         });
-
-
-
-        fs.writeFileSync(
-
-            giveawayFile,
-
-            JSON.stringify(
-                giveaways,
-                null,
-                2
-            )
-
-        );
 
 
 
