@@ -10,9 +10,10 @@ const {
 const config = require("./config");
 
 
+
 const client = new Client({
 
-    intents:[
+    intents: [
 
         GatewayIntentBits.Guilds,
 
@@ -49,7 +50,7 @@ const commandFiles = [
 ];
 
 
-for(const file of commandFiles){
+for (const file of commandFiles) {
 
     const command = require(file);
 
@@ -74,7 +75,7 @@ const buttonFiles = [
 ];
 
 
-for(const file of buttonFiles){
+for (const file of buttonFiles) {
 
     const button = require(file);
 
@@ -91,89 +92,102 @@ for(const file of buttonFiles){
 // READY
 // ================================
 
-client.once("ready",()=>{
+client.once("ready", () => {
+
+    console.log(
+        `💎 ${client.user.tag} is online`
+    );
 
 
-console.log(
-`💎 ${client.user.tag} is online`
-);
-
-
-client.user.setActivity(
-"Sinner Services V2 | Vouches"
-);
-
+    client.user.setActivity(
+        "Sinner Services V2 | Vouches"
+    );
 
 });
 
 
 
-
 // ================================
-// COMMANDS + BUTTONS
+// INTERACTIONS
 // ================================
 
 client.on(
 "interactionCreate",
-async interaction=>{
+async interaction => {
 
 
-try{
+try {
 
 
-if(interaction.isChatInputCommand()){
+if(interaction.isChatInputCommand()) {
 
 
-const command =
-client.commands.get(
-interaction.commandName
-);
+    const command =
+    client.commands.get(
+        interaction.commandName
+    );
 
 
-if(command){
+    if(command) {
 
-await command.execute(
-interaction
-);
+        await command.execute(
+            interaction
+        );
 
-}
-
-
-}
-
-
-
-if(interaction.isButton()){
-
-
-const button =
-client.buttons.get(
-interaction.customId
-);
-
-
-if(button){
-
-await button.execute(
-interaction
-);
-
-}
+    }
 
 
 }
 
 
+
+if(interaction.isButton()) {
+
+
+    const button =
+    client.buttons.get(
+        interaction.customId
+    );
+
+
+    if(button) {
+
+        await button.execute(
+            interaction
+        );
+
+    }
+
+
 }
 
 
-catch(error){
+
+}
+
+catch(error) {
+
 
 console.log(
 "Interaction Error:",
 error
 );
 
+
+if(!interaction.replied) {
+
+    await interaction.reply({
+
+        content:
+        "❌ Something went wrong.",
+
+        ephemeral:true
+
+    }).catch(()=>{});
+
+}
+
+
 }
 
 
@@ -182,96 +196,69 @@ error
 
 
 
-
 // ================================
-// GIVEAWAY TIMER
+// GIVEAWAY AUTO END
 // ================================
 
 setInterval(async()=>{
 
 
-for(const giveaway of client.giveaways){
+for(const giveaway of client.giveaways) {
+
+
+    if(giveaway.ended)
+    continue;
+
+
+    if(Date.now() >= giveaway.endTime) {
+
+
+        giveaway.ended = true;
+
+
+        const channel =
+        await client.channels.fetch(
+            giveaway.channelId
+        ).catch(()=>null);
 
 
 
-if(
-giveaway.ended
-)
-continue;
+        if(!channel)
+        continue;
 
 
 
-if(
-Date.now() >= giveaway.endTime
-){
+        let winner = "No entries";
 
 
-giveaway.ended = true;
+        if(giveaway.entries.length > 0) {
 
 
-
-const guild =
-client.guilds.cache.get(
-giveaway.guildId
-);
-
-
-
-if(!guild)
-continue;
+            const id =
+            giveaway.entries[
+                Math.floor(
+                    Math.random() *
+                    giveaway.entries.length
+                )
+            ];
 
 
+            winner = `<@${id}>`;
 
-const channel =
-guild.channels.cache.get(
-giveaway.channelId
-);
+        }
 
 
 
-if(!channel)
-continue;
+        const embed =
+        new EmbedBuilder()
 
+        .setColor("#B30000")
 
+        .setTitle(
+            "🎉 Giveaway Ended!"
+        )
 
-let winner = "No entries";
-
-
-if(
-giveaway.entries.length > 0
-){
-
-
-winner = `<@${
-
-giveaway.entries[
-
-Math.floor(
-
-Math.random() *
-
-giveaway.entries.length
-
-)
-
-]
-
-}>`;
-
-
-}
-
-
-
-const embed =
-new EmbedBuilder()
-
-.setColor("#B30000")
-
-.setTitle("🎉 Giveaway Ended!")
-
-.setDescription(
-
+        .setDescription(
 `
 🏆 **Winner**
 ${winner}
@@ -286,12 +273,40 @@ ${giveaway.entries.length}
 
 Congratulations!
 `
+        )
 
-)
+        .setFooter({
 
-.setFooter({
+            text:
+            "Sinner Services"
 
-text:"Sinner Services"
+        });
 
-})
 
+
+        await channel.send({
+
+            embeds:[embed]
+
+        });
+
+
+
+    }
+
+
+}
+
+
+},10000);
+
+
+
+
+// ================================
+// LOGIN
+// ================================
+
+client.login(
+    config.TOKEN
+);
