@@ -1,7 +1,7 @@
 {
   "name": "sinner-services-v2",
   "version": "1.0.0",
-  "description": "Premium Sinner Services Discord Vouch Bot",
+  "description": "Sinner Services Premium Discord Vouch Bot",
   "main": "index.js",
   "scripts": {
     "start": "node deploy-commands.js && node index.js",
