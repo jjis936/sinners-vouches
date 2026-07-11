@@ -16,14 +16,19 @@ const {
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
   ]
 });
+
+const VOUCH_CHANNEL_ID = "1507682259678003371";
+
+const pendingVouches = new Map();
 
 const commands = [
   new SlashCommandBuilder()
     .setName("panel")
-    .setDescription("Create the Sinner Services vouch panel")
+    .setDescription("Create the vouch panel")
     .toJSON()
 ];
 
@@ -47,8 +52,11 @@ client.once("ready", async () => {
 });
 
 
+
 client.on("interactionCreate", async interaction => {
 
+
+  // PANEL
 
   if (interaction.isChatInputCommand()) {
 
@@ -67,13 +75,15 @@ Click the button below to leave your review.
 ⭐ Rating (1-5)
 💬 Feedback
 🎮 Service Used
+📸 Proof Screenshot
 
-Your vouch helps us improve!`
+Your feedback helps us improve!`
       )
 
       .setFooter({
         text:"Sinner Services • Vouch System"
       });
+
 
 
       const button = new ButtonBuilder()
@@ -91,10 +101,8 @@ Your vouch helps us improve!`
         embeds:[embed],
 
         components:[
-
           new ActionRowBuilder()
           .addComponents(button)
-
         ]
 
       });
@@ -105,10 +113,12 @@ Your vouch helps us improve!`
 
 
 
-  if (interaction.isButton()) {
+  // BUTTON
+
+  if(interaction.isButton()) {
 
 
-    if (interaction.customId === "leave_vouch") {
+    if(interaction.customId === "leave_vouch") {
 
 
       const modal = new ModalBuilder()
@@ -118,11 +128,12 @@ Your vouch helps us improve!`
       .setTitle("Sinner Services Vouch");
 
 
+
       const rating = new TextInputBuilder()
 
       .setCustomId("rating")
 
-      .setLabel("⭐ Rating (1-5)")
+      .setLabel("⭐ Rating 1-5")
 
       .setStyle(TextInputStyle.Short)
 
@@ -176,86 +187,39 @@ Your vouch helps us improve!`
 
 
 
-  if (interaction.isModalSubmit()) {
+  // FORM
+
+  if(interaction.isModalSubmit()) {
 
 
-    if (interaction.customId === "vouch_form") {
+    if(interaction.customId === "vouch_form") {
 
 
-      let rating =
-      Number(
-        interaction.fields.getTextInputValue("rating")
-      );
+      pendingVouches.set(interaction.user.id, {
 
+        rating:
+        interaction.fields.getTextInputValue("rating"),
 
-      if (rating < 1) rating = 1;
-      if (rating > 5) rating = 5;
+        feedback:
+        interaction.fields.getTextInputValue("feedback"),
 
+        service:
+        interaction.fields.getTextInputValue("service")
 
-
-      const stars =
-      "⭐".repeat(rating);
-
-
-
-      const feedback =
-      interaction.fields.getTextInputValue("feedback");
-
-
-      const service =
-      interaction.fields.getTextInputValue("service");
-
-
-
-      const embed = new EmbedBuilder()
-
-      .setTitle("⭐ New Vouch Received")
-
-      .addFields(
-
-        {
-          name:"⭐ Rating",
-          value:stars
-        },
-
-        {
-          name:"💬 Feedback",
-          value:feedback
-        },
-
-        {
-          name:"🎮 Service",
-          value:service
-        },
-
-        {
-          name:"👤 Customer",
-          value:`${interaction.user}`
-        }
-
-      )
-
-      .setTimestamp()
-
-      .setFooter({
-        text:"Sinner Services"
       });
 
 
 
       await interaction.reply({
 
-        content:"✅ Your vouch has been submitted!",
+        content:
+`📸 **Upload your proof screenshot now.**
+
+Send your image/file in this channel.
+
+You have 2 minutes.`,
 
         ephemeral:true
-
-      });
-
-
-
-      await interaction.channel.send({
-
-        embeds:[embed]
 
       });
 
@@ -268,5 +232,112 @@ Your vouch helps us improve!`
 });
 
 
-client.login(process.env.TOKEN);
 
+
+// PROOF UPLOAD
+
+client.on("messageCreate", async message => {
+
+
+  if(message.author.bot) return;
+
+
+  const data =
+  pendingVouches.get(message.author.id);
+
+
+
+  if(!data) return;
+
+
+
+  if(message.attachments.size === 0) return;
+
+
+
+  const rating =
+  Math.min(
+    Math.max(Number(data.rating),1),
+    5
+  );
+
+
+  const stars =
+  "⭐".repeat(rating);
+
+
+
+  const image =
+  message.attachments.first().url;
+
+
+
+  const embed = new EmbedBuilder()
+
+  .setTitle("⭐ New Vouch Received")
+
+  .addFields(
+
+    {
+      name:"⭐ Rating",
+      value:stars
+    },
+
+    {
+      name:"💬 Feedback",
+      value:data.feedback
+    },
+
+    {
+      name:"🎮 Service",
+      value:data.service
+    },
+
+    {
+      name:"👤 Customer",
+      value:`${message.author}`
+    }
+
+  )
+
+  .setImage(image)
+
+  .setTimestamp()
+
+  .setFooter({
+    text:"Sinner Services"
+  });
+
+
+
+  const channel =
+  client.channels.cache.get(VOUCH_CHANNEL_ID);
+
+
+
+  if(channel){
+
+    await channel.send({
+
+      embeds:[embed]
+
+    });
+
+  }
+
+
+
+  pendingVouches.delete(message.author.id);
+
+
+
+  await message.reply(
+    "✅ Your vouch has been posted! Thank you!"
+  );
+
+
+});
+
+
+
+client.login(process.env.TOKEN);
