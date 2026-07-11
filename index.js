@@ -36,7 +36,8 @@ const client = new Client({
 client.commands = new Collection();
 
 
-// Panel command
+
+// Panel
 
 const panel =
 require("./commands/panel");
@@ -47,7 +48,8 @@ client.commands.set(
 );
 
 
-// Vouch stats command
+
+// Vouch Stats
 
 const vouchstats =
 require("./commands/vouchstats");
@@ -56,6 +58,19 @@ client.commands.set(
     vouchstats.data.name,
     vouchstats
 );
+
+
+
+// Post Command
+
+const post =
+require("./commands/post");
+
+client.commands.set(
+    post.data.name,
+    post
+);
+
 
 
 
@@ -91,6 +106,7 @@ client.on(
 
 
 
+
 // ================================
 // READY
 // ================================
@@ -112,6 +128,7 @@ client.once("ready", () => {
 
 
 
+
 // ================================
 // INTERACTIONS
 // ================================
@@ -122,7 +139,6 @@ async interaction => {
 
 
 try {
-
 
 
     // Slash Commands
@@ -241,8 +257,8 @@ catch(error){
 }
 
 
-
 });
+
 
 
 
