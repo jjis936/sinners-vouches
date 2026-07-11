@@ -7,67 +7,66 @@ const config = require("../config");
 
 module.exports = {
 
-
-name:"messageCreate",
-
-
-async execute(message){
+    async execute(message) {
 
 
-    if(message.author.bot)
-        return;
+        if(message.author.bot)
+            return;
 
 
-    if(!message.attachments.size)
-        return;
+        // Only continue if there is an upload
+
+        if(message.attachments.size === 0)
+            return;
 
 
 
-    if(!message.content.includes("PROOF"))
-        return;
+        const embed = new EmbedBuilder()
 
+        .setColor(
+            config.COLORS.RED
+        )
 
+        .setTitle(
+            "📸 Proof Received"
+        )
 
-    const embed =
-    new EmbedBuilder()
-
-    .setColor(
-        config.COLORS.RED
-    )
-
-    .setTitle(
-        "💎 NEW CUSTOMER REVIEW"
-    )
-
-    .setDescription(
+        .setDescription(
 `
-👤 Customer
+👤 **Customer**
 
 ${message.author}
 
 
-📸 Proof Attached
+📎 **Uploaded Files**
 
-Thank you for your review!
-
-━━━━━━━━━━━━━━━━
-
-💎 Sinner Services
+Your proof has been received.
 `
-    )
 
-    .setTimestamp();
+        )
+
+        .setTimestamp()
+
+        .setFooter({
+
+            text:
+            "Sinner Services • Proof System"
+
+        });
 
 
 
-    const channel =
-    message.guild.channels.cache.get(
-        config.VOUCH_CHANNEL_ID
-    );
+        const channel =
+        message.guild.channels.cache.get(
+            config.VOUCH_CHANNEL_ID
+        );
 
 
 
-    if(channel){
+        if(!channel)
+            return;
+
+
 
         await channel.send({
 
@@ -81,9 +80,7 @@ Thank you for your review!
 
         });
 
+
     }
-
-
-}
 
 };
