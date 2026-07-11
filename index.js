@@ -1,9 +1,9 @@
 require("dotenv").config();
 
 const {
-Client,
-GatewayIntentBits,
-Collection
+    Client,
+    GatewayIntentBits,
+    Collection
 } = require("discord.js");
 
 const config = require("./config");
@@ -11,65 +11,99 @@ const config = require("./config");
 
 const client = new Client({
 
-intents:[
+    intents: [
 
-GatewayIntentBits.Guilds,
+        GatewayIntentBits.Guilds,
 
-GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessages,
 
-GatewayIntentBits.MessageContent
+        GatewayIntentBits.MessageContent
 
-]
+    ]
 
 });
 
 
+
+// ================================
+// COMMAND COLLECTION
+// ================================
 
 client.commands = new Collection();
 
 
 
+// Load Commands
+
 const panel =
 require("./commands/panel");
 
 
+const vouchstats =
+require("./commands/vouchstats");
+
+
+
 client.commands.set(
-panel.data.name,
-panel
+    panel.data.name,
+    panel
+);
+
+
+client.commands.set(
+    vouchstats.data.name,
+    vouchstats
 );
 
 
 
-
+// ================================
 // MESSAGE EVENT
+// ================================
 
 const messageEvent =
 require("./events/messageCreate");
 
+
 client.on(
 "messageCreate",
-message => {
+async message => {
 
-try {
 
-messageEvent.execute(message);
+    try {
 
-}
 
-catch(error){
+        await messageEvent.execute(
+            message
+        );
 
-console.log(error);
 
-}
+    }
+
+
+    catch(error){
+
+
+        console.log(
+            "Message Event Error:",
+            error
+        );
+
+
+    }
+
 
 });
 
 
 
+// ================================
+// BOT READY
+// ================================
 
-// READY
-
-client.once("ready",()=>{
+client.once(
+"ready",
+()=>{
 
 
 console.log(
@@ -77,19 +111,48 @@ console.log(
 );
 
 
+
+client.user.setPresence({
+
+activities:[
+
+{
+
+name:
+"Sinner Services V2 | Vouches"
+
+}
+
+],
+
+
+status:
+"online"
+
+
 });
 
 
 
+});
 
+
+
+// ================================
 // INTERACTIONS
+// ================================
 
 client.on(
 "interactionCreate",
-async interaction=>{
+async interaction => {
 
 
 try{
+
+
+// ----------------
+// SLASH COMMANDS
+// ----------------
 
 
 if(
@@ -103,18 +166,26 @@ interaction.commandName
 );
 
 
-if(command){
+
+if(!command)
+return;
+
+
 
 await command.execute(
 interaction
 );
 
-}
 
 
 }
 
 
+
+
+// ----------------
+// BUTTONS
+// ----------------
 
 
 if(
@@ -131,17 +202,25 @@ const button =
 require("./buttons/leave_vouch");
 
 
+
 await button.execute(
 interaction
 );
 
 
-}
-
 
 }
 
 
+
+}
+
+
+
+
+// ----------------
+// MODALS
+// ----------------
 
 
 if(
@@ -158,23 +237,52 @@ const modal =
 require("./modals/vouch_form");
 
 
+
 await modal.execute(
 interaction
 );
 
 
-}
-
 
 }
 
 
 
 }
+
+
+
+}
+
 
 catch(error){
 
-console.log(error);
+
+console.log(
+"Interaction Error:",
+error
+);
+
+
+
+if(
+!interaction.replied &&
+!interaction.deferred
+){
+
+
+await interaction.reply({
+
+content:
+"❌ Something went wrong. Please try again.",
+
+ephemeral:true
+
+});
+
+
+}
+
 
 
 }
@@ -184,6 +292,9 @@ console.log(error);
 
 
 
+// ================================
+// LOGIN
+// ================================
 
 client.login(
 config.TOKEN
