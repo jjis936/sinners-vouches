@@ -4,7 +4,10 @@ module.exports = {
 
     CLIENT_ID: process.env.CLIENT_ID,
 
-    GUILD_ID: process.env.GUILD_ID,
+
+    VOUCH_CHANNEL_ID:
+    "1507682259678003371",
+
 
 
     COLORS: {
@@ -16,6 +19,7 @@ module.exports = {
         WHITE: "#FFFFFF"
 
     },
+
 
 
     BRAND: {
