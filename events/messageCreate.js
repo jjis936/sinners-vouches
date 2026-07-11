@@ -27,7 +27,7 @@ async execute(message){
 
 
 
-    // Only process uploads
+    // Only detect uploads
 
     if(message.attachments.size === 0)
         return;
@@ -51,7 +51,7 @@ async execute(message){
 
 
 
-    // No pending review
+    // No pending vouch
 
     if(!pending)
         return;
@@ -60,9 +60,9 @@ async execute(message){
 
     let stats = {
 
-        totalVouches:0,
+        totalVouches: 0,
 
-        averageRating:0
+        averageRating: 0
 
     };
 
@@ -74,7 +74,6 @@ async execute(message){
         );
 
     }
-
 
 
 
@@ -102,7 +101,6 @@ async execute(message){
 
 
 
-
     const reviewNumber =
     stats.totalVouches;
 
@@ -122,8 +120,6 @@ async execute(message){
 
 
 
-
-
     const stars =
     "⭐".repeat(
         Number(pending.rating)
@@ -131,24 +127,25 @@ async execute(message){
 
 
 
-    let ratingText =
-    "Average";
-
+    let ratingText = "Average";
 
 
     if(pending.rating == 5)
         ratingText = "Excellent";
 
-    if(pending.rating == 4)
+    else if(pending.rating == 4)
         ratingText = "Great";
 
-    if(pending.rating == 3)
+    else if(pending.rating == 3)
         ratingText = "Good";
 
-    if(pending.rating <= 2)
+    else if(pending.rating <= 2)
         ratingText = "Needs Improvement";
 
 
+
+    const proof =
+    message.attachments.first();
 
 
 
@@ -205,6 +202,10 @@ ${pending.feedback}
 
     )
 
+    .setImage(
+        proof.url
+    )
+
     .setTimestamp()
 
     .setFooter({
@@ -213,8 +214,6 @@ ${pending.feedback}
         "Sinner Services • Verified Reviews"
 
     });
-
-
 
 
 
@@ -230,12 +229,8 @@ ${pending.feedback}
 
         await channel.send({
 
-            embeds:[embed],
-
-            files:[
-
-                message.attachments.first().url
-
+            embeds:[
+                embed
             ]
 
         });
@@ -246,7 +241,7 @@ ${pending.feedback}
 
 
 
-    // Remove uploaded proof message
+    // Delete uploaded proof
 
     await message.delete()
     .catch(()=>{});
@@ -254,7 +249,7 @@ ${pending.feedback}
 
 
 
-    // Clear pending review
+    // Remove pending vouch
 
     delete vouches[message.author.id];
 
