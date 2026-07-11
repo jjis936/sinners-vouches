@@ -8,184 +8,164 @@ const {
 
 const config = require("./config");
 
-
-// ================================
-// CREATE BOT
-// ================================
-
 const client = new Client({
 
     intents: [
-
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages
-
     ]
 
 });
 
 
-// ================================
 // COMMANDS
-// ================================
 
 client.commands = new Collection();
 
+try {
 
-const panel =
-require("./commands/panel");
+    const panel = require("./commands/panel");
+
+    client.commands.set(
+        panel.data.name,
+        panel
+    );
+
+    console.log("✅ Panel command loaded");
+
+} catch(error){
+
+    console.log(
+        "❌ Panel command error:",
+        error
+    );
+
+}
 
 
-client.commands.set(
-    panel.data.name,
-    panel
-);
-
-
-
-// ================================
-// BOT ONLINE
-// ================================
+// READY
 
 client.once("ready", () => {
-
 
     console.log(
         `💎 ${client.user.tag} is online`
     );
 
-
-    client.user.setActivity(
-        "Sinner Services V2 | Vouches"
-    );
-
-
 });
 
 
 
-// ================================
 // INTERACTIONS
-// ================================
 
 client.on(
 "interactionCreate",
 async interaction => {
 
 
-
-    // ============================
-    // SLASH COMMANDS
-    // ============================
+    try {
 
 
-    if(
-        interaction.isChatInputCommand()
-    ){
+        // SLASH COMMANDS
+
+        if(
+            interaction.isChatInputCommand()
+        ){
+
+            const command =
+            client.commands.get(
+                interaction.commandName
+            );
 
 
-        const command =
-        client.commands.get(
-            interaction.commandName
-        );
-
-
-        if(!command)
-            return;
-
-
-        try {
+            if(!command)
+                return;
 
 
             await command.execute(
                 interaction
             );
 
-
-        }
-
-        catch(error){
-
-
-            console.log(error);
-
-
         }
 
 
-    }
 
-
-
-    // ============================
-    // BUTTONS
-    // ============================
-
-
-    if(
-        interaction.isButton()
-    ){
-
+        // BUTTONS
 
         if(
-            interaction.customId === "leave_vouch"
+            interaction.isButton()
         ){
 
+            if(
+                interaction.customId === "leave_vouch"
+            ){
 
-            const button =
-            require("./buttons/leave_vouch");
+                const button =
+                require("./buttons/leave_vouch");
 
 
-            await button.execute(
-                interaction
-            );
+                await button.execute(
+                    interaction
+                );
 
+            }
 
         }
 
 
-    }
 
-
-
-    // ============================
-    // MODALS
-    // ============================
-
-
-    if(
-        interaction.isModalSubmit()
-    ){
-
+        // MODALS
 
         if(
-            interaction.customId === "vouch_form"
+            interaction.isModalSubmit()
         ){
 
+            if(
+                interaction.customId === "vouch_form"
+            ){
 
-            const modal =
-            require("./modals/vouch_form");
+                const modal =
+                require("./modals/vouch_form");
 
 
-            await modal.execute(
-                interaction
-            );
+                await modal.execute(
+                    interaction
+                );
 
+            }
+
+        }
+
+
+
+    } catch(error){
+
+
+        console.log(
+            "Interaction Error:",
+            error
+        );
+
+
+        if(!interaction.replied){
+
+            await interaction.reply({
+
+                content:
+                "❌ Something went wrong. Please try again.",
+
+                ephemeral:true
+
+            });
 
         }
 
 
     }
-
 
 
 });
 
 
-
-// ================================
-// LOGIN
-// ================================
 
 client.login(
     config.TOKEN
