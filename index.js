@@ -9,12 +9,18 @@ const {
 const config = require("./config");
 
 
+// ================================
+// CREATE BOT
+// ================================
+
 const client = new Client({
 
-    intents:[
+    intents: [
 
         GatewayIntentBits.Guilds,
+
         GatewayIntentBits.GuildMessages,
+
         GatewayIntentBits.MessageContent
 
     ]
@@ -24,41 +30,31 @@ const client = new Client({
 
 
 // ================================
-// COMMANDS
+// COMMAND SYSTEM
 // ================================
 
 client.commands = new Collection();
 
 
+// Panel command
 
 const panel =
 require("./commands/panel");
 
+client.commands.set(
+    panel.data.name,
+    panel
+);
+
+
+// Vouch stats command
 
 const vouchstats =
 require("./commands/vouchstats");
 
-
-const leaderboard =
-require("./commands/leaderboard");
-
-
-
 client.commands.set(
-panel.data.name,
-panel
-);
-
-
-client.commands.set(
-vouchstats.data.name,
-vouchstats
-);
-
-
-client.commands.set(
-leaderboard.data.name,
-leaderboard
+    vouchstats.data.name,
+    vouchstats
 );
 
 
@@ -71,34 +67,27 @@ const messageEvent =
 require("./events/messageCreate");
 
 
-
 client.on(
-"messageCreate",
-async message=>{
+    "messageCreate",
+    async message => {
 
+        try {
 
-try{
+            await messageEvent.execute(
+                message
+            );
 
+        } catch(error){
 
-await messageEvent.execute(
-message
+            console.log(
+                "Message Error:",
+                error
+            );
+
+        }
+
+    }
 );
-
-
-}
-
-catch(error){
-
-console.log(
-"Message Error:",
-error
-);
-
-
-}
-
-
-});
 
 
 
@@ -106,34 +95,17 @@ error
 // READY
 // ================================
 
-client.once(
-"ready",
-()=>{
+client.once("ready", () => {
 
 
-console.log(
-`💎 ${client.user.tag} is online`
-);
+    console.log(
+        `💎 ${client.user.tag} is online`
+    );
 
 
-
-client.user.setPresence({
-
-activities:[
-
-{
-
-name:
-"Sinner Services V2 | Reviews"
-
-}
-
-],
-
-status:
-"online"
-
-});
+    client.user.setActivity(
+        "Sinner Services V2 | Vouches"
+    );
 
 
 });
@@ -146,93 +118,94 @@ status:
 
 client.on(
 "interactionCreate",
-async interaction=>{
+async interaction => {
 
 
-try{
-
-
-// SLASH COMMANDS
-
-if(
-interaction.isChatInputCommand()
-){
-
-
-const command =
-client.commands.get(
-interaction.commandName
-);
+try {
 
 
 
-if(!command)
-return;
+    // Slash Commands
+
+    if(
+        interaction.isChatInputCommand()
+    ){
+
+
+        const command =
+        client.commands.get(
+            interaction.commandName
+        );
+
+
+        if(!command)
+            return;
 
 
 
-await command.execute(
-interaction
-);
+        await command.execute(
+            interaction
+        );
 
 
-}
-
-
-
-// BUTTONS
-
-if(
-interaction.isButton()
-){
-
-
-if(
-interaction.customId === "leave_vouch"
-){
-
-
-const button =
-require("./buttons/leave_vouch");
-
-
-await button.execute(
-interaction
-);
-
-
-}
-
-
-}
+    }
 
 
 
-// MODALS
+    // Buttons
 
-if(
-interaction.isModalSubmit()
-){
-
-
-if(
-interaction.customId === "vouch_form"
-){
+    if(
+        interaction.isButton()
+    ){
 
 
-const modal =
-require("./modals/vouch_form");
+        if(
+            interaction.customId === "leave_vouch"
+        ){
 
 
-await modal.execute(
-interaction
-);
+            const button =
+            require("./buttons/leave_vouch");
 
 
-}
+            await button.execute(
+                interaction
+            );
 
 
-}
+        }
+
+
+    }
+
+
+
+
+    // Modals
+
+    if(
+        interaction.isModalSubmit()
+    ){
+
+
+        if(
+            interaction.customId === "vouch_form"
+        ){
+
+
+            const modal =
+            require("./modals/vouch_form");
+
+
+            await modal.execute(
+                interaction
+            );
+
+
+        }
+
+
+    }
 
 
 
@@ -242,30 +215,27 @@ interaction
 catch(error){
 
 
-console.log(
-"Interaction Error:",
-error
-);
+    console.log(
+        "Interaction Error:",
+        error
+    );
 
 
 
-if(
-!interaction.replied &&
-!interaction.deferred
-){
+    if(!interaction.replied){
 
 
-await interaction.reply({
+        await interaction.reply({
 
-content:
-"❌ Something went wrong.",
+            content:
+            "❌ Something went wrong.",
 
-ephemeral:true
+            ephemeral:true
 
-});
+        });
 
 
-}
+    }
 
 
 }
@@ -281,5 +251,5 @@ ephemeral:true
 // ================================
 
 client.login(
-config.TOKEN
+    config.TOKEN
 );
