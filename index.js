@@ -8,17 +8,25 @@ const {
 
 const config = require("./config");
 
+
 // ================================
 // CREATE BOT
 // ================================
 
 const client = new Client({
+
     intents: [
+
         GatewayIntentBits.Guilds,
+
         GatewayIntentBits.GuildMessages,
+
         GatewayIntentBits.MessageContent
+
     ]
+
 });
+
 
 // ================================
 // COMMAND SYSTEM
@@ -26,109 +34,211 @@ const client = new Client({
 
 client.commands = new Collection();
 
-const panel = require("./commands/panel");
-const vouchstats = require("./commands/vouchstats");
-const post = require("./commands/post");
-const embed = require("./commands/embed");
 
-client.commands.set(panel.data.name, panel);
-client.commands.set(vouchstats.data.name, vouchstats);
-client.commands.set(post.data.name, post);
-client.commands.set(embed.data.name, embed);
+// LOAD COMMANDS
+
+const commandFiles = [
+
+    "panel",
+    "vouchstats",
+    "post",
+    "embed",
+    "ban"
+
+];
+
+
+for (const file of commandFiles) {
+
+    const command =
+    require(`./commands/${file}`);
+
+    client.commands.set(
+        command.data.name,
+        command
+    );
+
+}
+
+
 
 // ================================
 // MESSAGE EVENTS
 // ================================
 
-const messageEvent = require("./events/messageCreate");
+client.on(
+    "messageCreate",
+    async message => {
 
-client.on("messageCreate", async (message) => {
+        try {
 
-    try {
+            const messageEvent =
+            require("./events/messageCreate");
 
-        await messageEvent.execute(message);
+            await messageEvent.execute(message);
 
-    } catch (error) {
+        } catch(error){
 
-        console.log("Message Error:", error);
+            console.log(
+                "Message Error:",
+                error
+            );
+
+        }
 
     }
+);
 
-});
+
 
 // ================================
 // READY
 // ================================
 
-client.once("ready", () => {
+client.once(
+    "ready",
+    () => {
 
-    console.log(`💎 ${client.user.tag} is online`);
+        console.log(
+            `💎 ${client.user.tag} is online`
+        );
 
-    client.user.setActivity("Sinner Services V2 | Vouches");
 
-});
+        client.user.setActivity(
+            "Sinner Services V2 | Premium"
+        );
+
+
+    }
+);
+
+
 
 // ================================
 // INTERACTIONS
 // ================================
 
-client.on("interactionCreate", async (interaction) => {
+client.on(
+    "interactionCreate",
+    async interaction => {
 
-    try {
 
-        if (interaction.isChatInputCommand()) {
+        try {
 
-            const command = client.commands.get(interaction.commandName);
 
-            if (!command) return;
+            // SLASH COMMANDS
 
-            await command.execute(interaction);
+            if(
+                interaction.isChatInputCommand()
+            ){
 
-        }
+                const command =
+                client.commands.get(
+                    interaction.commandName
+                );
 
-        if (interaction.isButton()) {
 
-            if (interaction.customId === "leave_vouch") {
+                if(!command)
+                    return;
 
-                const button = require("./buttons/leave_vouch");
 
-                await button.execute(interaction);
-
-            }
-
-        }
-
-        if (interaction.isModalSubmit()) {
-
-            if (interaction.customId === "vouch_form") {
-
-                const modal = require("./modals/vouch_form");
-
-                await modal.execute(interaction);
+                await command.execute(
+                    interaction
+                );
 
             }
 
+
+
+            // BUTTONS
+
+            if(
+                interaction.isButton()
+            ){
+
+
+                if(
+                    interaction.customId === "leave_vouch"
+                ){
+
+                    const button =
+                    require("./buttons/leave_vouch");
+
+
+                    await button.execute(
+                        interaction
+                    );
+
+                }
+
+
+            }
+
+
+
+            // MODALS
+
+            if(
+                interaction.isModalSubmit()
+            ){
+
+
+                if(
+                    interaction.customId === "vouch_form"
+                ){
+
+                    const modal =
+                    require("./modals/vouch_form");
+
+
+                    await modal.execute(
+                        interaction
+                    );
+
+                }
+
+
+            }
+
+
         }
 
-    } catch (error) {
 
-        console.log("Interaction Error:", error);
+        catch(error){
 
-        if (!interaction.replied && !interaction.deferred) {
 
-            await interaction.reply({
-                content: "❌ Something went wrong.",
-                ephemeral: true
-            });
+            console.log(
+                "Interaction Error:",
+                error
+            );
+
+
+            if(!interaction.replied){
+
+                await interaction.reply({
+
+                    content:
+                    "❌ Something went wrong.",
+
+                    ephemeral:true
+
+                });
+
+            }
+
 
         }
+
 
     }
+);
 
-});
+
 
 // ================================
 // LOGIN
 // ================================
 
-client.login(config.TOKEN);
+client.login(
+    config.TOKEN
+);
