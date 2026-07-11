@@ -1,8 +1,6 @@
-const {
-    EmbedBuilder
-} = require("discord.js");
+const fs = require("fs");
 
-const config = require("../config");
+const path = "./database/vouches.json";
 
 
 module.exports = {
@@ -12,7 +10,6 @@ customId: "vouch_form",
 
 
 async execute(interaction){
-
 
 
 const rating =
@@ -34,107 +31,51 @@ interaction.fields.getTextInputValue(
 
 
 
-let stars = "";
+let data = {};
 
-const number =
-Math.min(
-Math.max(
-Number(rating),
-1
-),
-5
+
+if(fs.existsSync(path)){
+
+data = JSON.parse(
+fs.readFileSync(path)
 );
-
-
-
-stars =
-"⭐".repeat(number);
-
-
-
-const embed =
-new EmbedBuilder()
-
-.setColor(
-config.COLORS.RED
-)
-
-.setTitle(
-"💎 NEW CUSTOMER REVIEW"
-)
-
-.setDescription(
-
-`
-👤 **Customer**
-
-${interaction.user}
-
-
-━━━━━━━━━━━━━━━━
-
-⭐ **Rating**
-
-${stars} (${number}/5)
-
-
-🎮 **Service Used**
-
-${service}
-
-
-💬 **Feedback**
-
-${feedback}
-
-
-━━━━━━━━━━━━━━━━
-
-💎 **Sinner Services**
-
-`
-
-)
-
-.setTimestamp()
-
-.setFooter({
-
-text:
-"Sinner Services • Customer Reviews"
-
-});
-
-
-
-
-// Send to vouch channel
-
-const channel =
-interaction.guild.channels.cache.get(
-config.VOUCH_CHANNEL_ID
-);
-
-
-
-if(channel){
-
-    await channel.send({
-
-        embeds:[
-            embed
-        ]
-
-    });
 
 }
+
+
+
+data[interaction.user.id] = {
+
+rating: rating,
+
+feedback: feedback,
+
+service: service,
+
+time: Date.now()
+
+};
+
+
+
+fs.writeFileSync(
+
+path,
+
+JSON.stringify(
+data,
+null,
+2
+)
+
+);
 
 
 
 await interaction.reply({
 
 content:
-"✅ Your vouch has been submitted!",
+"✅ Vouch information saved!\n\n📸 Now send your proof screenshot or video in this channel.",
 
 ephemeral:true
 
@@ -143,6 +84,5 @@ ephemeral:true
 
 
 }
-
 
 };
