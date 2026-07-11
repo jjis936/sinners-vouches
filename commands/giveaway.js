@@ -7,126 +7,193 @@ const {
     PermissionFlagsBits
 } = require("discord.js");
 
+const fs = require("fs");
+const path = require("path");
+
+
+const filePath = path.join(
+    __dirname,
+    "../data/giveaways.json"
+);
+
+
+
 module.exports = {
 
-    data: new SlashCommandBuilder()
+data: new SlashCommandBuilder()
 
-        .setName("giveaway")
-        .setDescription("Create a giveaway")
+.setName("giveaway")
 
-        .addStringOption(option =>
-            option
-                .setName("prize")
-                .setDescription("Giveaway prize")
-                .setRequired(true)
-        )
+.setDescription("Create an automatic giveaway")
 
-        .addStringOption(option =>
-            option
-                .setName("duration")
-                .setDescription("Example: 1h, 24h, 7d")
-                .setRequired(true)
-        ),
+.addStringOption(option =>
+    option
+    .setName("prize")
+    .setDescription("Giveaway prize")
+    .setRequired(true)
+)
 
-
-    async execute(interaction) {
+.addIntegerOption(option =>
+    option
+    .setName("duration")
+    .setDescription("Duration in minutes")
+    .setRequired(true)
+),
 
 
-        if(
-            !interaction.member.permissions.has(
-                PermissionFlagsBits.ManageGuild
-            )
-        ){
 
-            return interaction.reply({
-
-                content:
-                "❌ You need Manage Server permission.",
-
-                ephemeral:true
-
-            });
-
-        }
+async execute(interaction){
 
 
-        const prize =
-        interaction.options.getString("prize");
+if(
+!interaction.member.permissions.has(
+PermissionFlagsBits.ManageGuild
+)
+){
+
+return interaction.reply({
+
+content:"❌ You need Manage Server permission.",
+
+ephemeral:true
+
+});
+
+}
 
 
-        const duration =
-        interaction.options.getString("duration");
+
+const prize =
+interaction.options.getString("prize");
 
 
-        const embed = new EmbedBuilder()
+const duration =
+interaction.options.getInteger("duration");
 
-        .setColor("#B30000")
 
-        .setTitle("🎉 Sinner Services Giveaway")
 
-        .setDescription(
+const endTime =
+Date.now() + duration * 60000;
+
+
+
+const embed = new EmbedBuilder()
+
+.setColor("#B30000")
+
+.setTitle("🎉 Sinner Services Giveaway")
+
+.setDescription(
 `
 🎁 **Prize**
 ${prize}
 
 ⏰ **Ends**
-${duration}
+<t:${Math.floor(endTime / 1000)}:R>
 
 👥 **Entries**
 0
 
 ━━━━━━━━━━━━━━
 
-Click the button below to enter!
+Click below to enter!
 `
-        )
+)
 
-        .setFooter({
-            text:"Sinner Services • Giveaway"
-        })
+.setFooter({
 
-        .setTimestamp();
+text:"Sinner Services"
 
+})
 
-
-        const button =
-        new ButtonBuilder()
-
-        .setCustomId("giveaway_enter")
-
-        .setLabel("🎉 Enter Giveaway")
-
-        .setStyle(ButtonStyle.Danger);
+.setTimestamp();
 
 
 
-        const row =
-        new ActionRowBuilder()
+const button =
+new ButtonBuilder()
 
-        .addComponents(button);
+.setCustomId("giveaway_enter")
 
+.setLabel("🎉 Enter Giveaway")
 
-
-        await interaction.channel.send({
-
-            embeds:[embed],
-
-            components:[row]
-
-        });
+.setStyle(ButtonStyle.Danger);
 
 
 
-        await interaction.reply({
+const row =
+new ActionRowBuilder()
 
-            content:
-            "✅ Giveaway created!",
-
-            ephemeral:true
-
-        });
+.addComponents(button);
 
 
-    }
+
+const message =
+await interaction.channel.send({
+
+embeds:[embed],
+
+components:[row]
+
+});
+
+
+
+let giveaways = [];
+
+if(fs.existsSync(filePath)){
+
+giveaways =
+JSON.parse(
+fs.readFileSync(filePath)
+);
+
+}
+
+
+
+giveaways.push({
+
+messageId: message.id,
+
+channelId: interaction.channel.id,
+
+guildId: interaction.guild.id,
+
+prize: prize,
+
+endTime: endTime,
+
+entries: []
+
+});
+
+
+
+fs.writeFileSync(
+
+filePath,
+
+JSON.stringify(
+giveaways,
+null,
+2
+)
+
+);
+
+
+
+await interaction.reply({
+
+content:"✅ Giveaway created and timer started!",
+
+ephemeral:true
+
+});
+
+
+
+}
 
 };
