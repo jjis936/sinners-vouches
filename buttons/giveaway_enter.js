@@ -1,44 +1,33 @@
-const fs = require("fs");
-const path = require("path");
-
-
-const giveawayFile = path.join(
-    __dirname,
-    "../data/giveaways.json"
-);
-
-
-
 module.exports = {
 
-
     customId: "giveaway_enter",
-
 
 
     async execute(interaction){
 
 
-        let giveaways = [];
+        const giveaways =
+        interaction.client.giveaways;
 
 
-        if(fs.existsSync(giveawayFile)){
 
+        if(!giveaways){
 
-            giveaways = JSON.parse(
+            return interaction.reply({
 
-                fs.readFileSync(
-                    giveawayFile
-                )
+                content:
+                "❌ No active giveaways.",
 
-            );
+                ephemeral:true
 
+            });
 
         }
 
 
 
-        const giveaway = giveaways.find(
+        const giveaway =
+        giveaways.find(
 
             g => g.messageId === interaction.message.id
 
@@ -83,7 +72,9 @@ module.exports = {
         if(
 
             giveaway.entries.includes(
+
                 interaction.user.id
+
             )
 
         ){
@@ -111,24 +102,6 @@ module.exports = {
 
 
 
-        fs.writeFileSync(
-
-            giveawayFile,
-
-            JSON.stringify(
-
-                giveaways,
-
-                null,
-
-                2
-
-            )
-
-        );
-
-
-
         await interaction.reply({
 
             content:
@@ -141,13 +114,11 @@ module.exports = {
 
 
         const embed =
-
         interaction.message.embeds[0].data;
 
 
 
         embed.description =
-
         embed.description.replace(
 
             /👥 \*\*Entries\*\*\n\d+/,
@@ -166,6 +137,5 @@ module.exports = {
 
 
     }
-
 
 };
