@@ -1,23 +1,18 @@
 const fs = require("fs");
 
 const {
-    EmbedBuilder
+    EmbedBuilder,
+    AttachmentBuilder
 } = require("discord.js");
 
 const config = require("../config");
 
 
-const vouchPath =
-"./database/vouches.json";
-
-
-const statsPath =
-"./database/settings.json";
-
+const vouchPath = "./database/vouches.json";
+const statsPath = "./database/settings.json";
 
 
 module.exports = {
-
 
 async execute(message){
 
@@ -26,12 +21,8 @@ async execute(message){
         return;
 
 
-
-    // Only detect uploads
-
     if(message.attachments.size === 0)
         return;
-
 
 
     let vouches = {};
@@ -45,13 +36,9 @@ async execute(message){
     }
 
 
-
     const pending =
     vouches[message.author.id];
 
-
-
-    // No pending vouch
 
     if(!pending)
         return;
@@ -60,9 +47,8 @@ async execute(message){
 
     let stats = {
 
-        totalVouches: 0,
-
-        averageRating: 0
+        totalVouches:0,
+        averageRating:0
 
     };
 
@@ -77,31 +63,20 @@ async execute(message){
 
 
 
-    stats.totalVouches += 1;
-
-
-
-    const oldTotal =
-    stats.totalVouches - 1;
-
+    stats.totalVouches++;
 
 
     stats.averageRating =
     (
         (
             stats.averageRating *
-            oldTotal
+            (stats.totalVouches - 1)
         )
         +
         Number(pending.rating)
 
     )
     /
-    stats.totalVouches;
-
-
-
-    const reviewNumber =
     stats.totalVouches;
 
 
@@ -127,25 +102,18 @@ async execute(message){
 
 
 
-    let ratingText = "Average";
-
-
-    if(pending.rating == 5)
-        ratingText = "Excellent";
-
-    else if(pending.rating == 4)
-        ratingText = "Great";
-
-    else if(pending.rating == 3)
-        ratingText = "Good";
-
-    else if(pending.rating <= 2)
-        ratingText = "Needs Improvement";
-
-
-
     const proof =
     message.attachments.first();
+
+
+
+    const file =
+    new AttachmentBuilder(
+        proof.url,
+        {
+            name:"proof.png"
+        }
+    );
 
 
 
@@ -157,7 +125,7 @@ async execute(message){
     )
 
     .setTitle(
-        `💎 CUSTOMER REVIEW #${reviewNumber}`
+        `💎 CUSTOMER REVIEW #${stats.totalVouches}`
     )
 
     .setDescription(
@@ -168,14 +136,14 @@ async execute(message){
 ${message.author}
 
 
-━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━
 
 
 ⭐ **Rating**
 
 ${stars}
 
-${pending.rating}/5 • ${ratingText}
+${pending.rating}/5
 
 
 🎮 **Service Used**
@@ -193,7 +161,7 @@ ${pending.feedback}
 ✅ Verified
 
 
-━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━
 
 
 💎 **Sinner Services**
@@ -203,7 +171,7 @@ ${pending.feedback}
     )
 
     .setImage(
-        proof.url
+        "attachment://proof.png"
     )
 
     .setTimestamp()
@@ -226,33 +194,28 @@ ${pending.feedback}
 
     if(channel){
 
-
         await channel.send({
 
             embeds:[
                 embed
+            ],
+
+            files:[
+                file
             ]
 
         });
 
-
     }
 
 
-
-
-    // Delete uploaded proof
 
     await message.delete()
     .catch(()=>{});
 
 
 
-
-    // Remove pending vouch
-
     delete vouches[message.author.id];
-
 
 
     fs.writeFileSync(
@@ -266,7 +229,6 @@ ${pending.feedback}
         )
 
     );
-
 
 
 }
