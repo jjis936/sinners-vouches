@@ -1,12 +1,14 @@
 {
-  "name": "sinner-vouches",
+  "name": "sinner-services-v2",
   "version": "1.0.0",
-  "description": "Sinner Services Vouch Bot",
+  "description": "Premium Discord Vouch System",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "deploy": "node deploy-commands.js"
   },
   "dependencies": {
-    "discord.js": "^14.17.3"
+    "discord.js": "^14.17.3",
+    "dotenv": "^16.4.5"
   }
 }
