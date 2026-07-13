@@ -4,412 +4,185 @@ const cors = require("cors");
 const {
     ChannelType,
     PermissionFlagsBits,
-    EmbedBuilder,
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle
+    EmbedBuilder
 } = require("discord.js");
-
 
 
 const app = express();
 
-
-
-// ===============================
-// WEBSITE CONNECTION SETTINGS
-// ===============================
-
-
 app.use(cors({
-
-    origin: "*",
-
-    methods: [
-        "GET",
-        "POST",
-        "OPTIONS"
-    ],
-
-    allowedHeaders: [
-        "Content-Type"
-    ]
-
+    origin: "*"
 }));
-
 
 app.use(express.json());
 
 
 
-
-
-// ===============================
-// DISCORD SETTINGS
-// ===============================
-
-
 const GUILD_ID = "1500601982740856875";
-
 const TICKET_CATEGORY = "1521521002545152170";
-
 const STAFF_ROLE = "1520900962867216506";
 
 
 
+function startWebsiteAPI(client) {
 
 
+    app.get("/", (req, res) => {
 
+        res.send("Sinner Services API Online");
 
+    });
 
-function startWebsiteAPI(client){
 
 
+    app.post("/create-order", async (req, res) => {
 
 
+        try {
 
-// TEST PAGE
 
-app.get("/", (req,res)=>{
+            const {
+                customer,
+                service,
+                package,
+                price,
+                notes
+            } = req.body;
 
-    res.status(200).send(
-        "Sinner Services Website API Online"
-    );
 
-});
 
+            const guild = client.guilds.cache.get(GUILD_ID);
 
 
 
+            if (!guild) {
 
+                return res.status(404).json({
+                    error: "Guild not found"
+                });
 
+            }
 
-// CREATE TICKET
 
-app.post("/create-order", async(req,res)=>{
 
+            const ticket = await guild.channels.create({
 
-try{
+                name: `ticket-${customer}`
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]/g, ""),
 
+                type: ChannelType.GuildText,
 
+                parent: TICKET_CATEGORY,
 
-console.log(
-    "Website order received:",
-    req.body
-);
 
+                permissionOverwrites: [
 
+                    {
+                        id: guild.roles.everyone.id,
+                        deny: [
+                            PermissionFlagsBits.ViewChannel
+                        ]
+                    },
 
 
-const {
+                    {
+                        id: STAFF_ROLE,
+                        allow: [
+                            PermissionFlagsBits.ViewChannel,
+                            PermissionFlagsBits.SendMessages
+                        ]
+                    }
 
-customer,
+                ]
 
-service,
+            });
 
-package,
 
-price,
 
-notes
 
+            const embed = new EmbedBuilder()
 
-} = req.body;
+                .setColor("#B30000")
 
+                .setTitle("💎 Sinner Services Order")
 
-
-
-
-const guild = client.guilds.cache.get(GUILD_ID);
-
-
-
-
-
-if(!guild){
-
-
-return res.status(404).json({
-
-success:false,
-
-error:"Discord server not found"
-
-});
-
-
-}
-
-
-
-
-
-
-
-const ticket = await guild.channels.create({
-
-
-name:
-
-`ticket-${customer}`
-
-.toLowerCase()
-
-.replace(/[^a-z0-9]/g,""),
-
-
-
-type:
-
-ChannelType.GuildText,
-
-
-
-parent:
-
-TICKET_CATEGORY,
-
-
-
-
-
-permissionOverwrites:[
-
-
-{
-
-id:guild.roles.everyone.id,
-
-deny:[
-
-PermissionFlagsBits.ViewChannel
-
-]
-
-},
-
-
-
-
-{
-
-id:STAFF_ROLE,
-
-allow:[
-
-PermissionFlagsBits.ViewChannel,
-
-PermissionFlagsBits.SendMessages,
-
-PermissionFlagsBits.ReadMessageHistory
-
-]
-
-}
-
-
-]
-
-
-});
-
-
-
-
-
-
-
-
-
-const embed = new EmbedBuilder()
-
-
-.setColor("#B30000")
-
-
-.setTitle(
-"💎 Sinner Services Order"
-)
-
-
-.setDescription(`
-
+                .setDescription(`
 **Customer**
-
 ${customer}
 
-
-
 **Service**
-
 ${service}
 
-
-
 **Package**
-
 ${package}
 
-
-
 **Price**
-
 $${price}
 
-
-
 **Notes**
-
 ${notes || "None"}
+                `);
 
 
 
-━━━━━━━━━━━━━━
+            await ticket.send({
 
-Sinner Services
+                content: `<@&${STAFF_ROLE}> New website order!`,
 
-`)
+                embeds: [embed]
 
-
-.setTimestamp();
-
+            });
 
 
 
+            res.json({
+
+                success:true,
+
+                ticket:ticket.id
+
+            });
 
 
 
-const buttons = new ActionRowBuilder()
+        } catch(error) {
 
 
-.addComponents(
+            console.log(error);
 
 
-new ButtonBuilder()
+            res.status(500).json({
 
-.setCustomId("claim_ticket")
+                success:false,
 
-.setLabel("Claim")
+                error:error.message
 
-.setStyle(ButtonStyle.Primary),
-
-
+            });
 
 
-new ButtonBuilder()
-
-.setCustomId("close_ticket")
-
-.setLabel("Close")
-
-.setStyle(ButtonStyle.Danger),
+        }
 
 
-
-
-new ButtonBuilder()
-
-.setCustomId("transcript")
-
-.setLabel("Transcript")
-
-.setStyle(ButtonStyle.Secondary)
-
-
-);
+    });
 
 
 
 
 
+    const PORT = process.env.PORT || 3000;
 
 
-await ticket.send({
+    app.listen(PORT, "0.0.0.0", () => {
 
-content:
+        console.log(
+            `🌐 API listening on ${PORT}`
+        );
 
-`<@&${STAFF_ROLE}> New website order!`,
-
-embeds:[embed],
-
-components:[buttons]
-
-});
-
-
-
-
-
-
-
-res.json({
-
-success:true,
-
-ticket:ticket.id
-
-});
-
-
-
+    });
 
 
 }
-
-catch(error){
-
-
-console.error(
-"Website API Error:",
-error
-);
-
-
-
-res.status(500).json({
-
-success:false,
-
-error:error.message
-
-});
-
-
-}
-
-
-
-});
-
-
-
-
-
-
-
-// START SERVER
-
-
-const PORT = process.env.PORT || 3000;
-
-
-app.listen(PORT,"0.0.0.0",()=>{
-
-
-console.log(
-
-`🌐 Website API Online on port ${PORT}`
-
-);
-
-
-});
-
-
-
-}
-
-
 
 
 
