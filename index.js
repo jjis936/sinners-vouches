@@ -15,7 +15,7 @@ const startWebsiteAPI = require("./website-api");
 
 const client = new Client({
 
-    intents: [
+    intents:[
 
         GatewayIntentBits.Guilds,
 
@@ -29,6 +29,12 @@ const client = new Client({
 
 
 
+
+
+// ===============================
+// COLLECTIONS
+// ===============================
+
 client.commands = new Collection();
 
 client.buttons = new Collection();
@@ -38,63 +44,124 @@ client.giveaways = [];
 
 
 
-// ================================
+
+
+// ===============================
 // COMMANDS
-// ================================
+// ===============================
 
 const commands = [
 
     "./commands/panel",
+
     "./commands/vouchstats",
+
     "./commands/post",
+
     "./commands/embed",
+
     "./commands/giveaway",
+
     "./commands/ticketpanel"
 
 ];
 
 
+
 for(const file of commands){
 
-    const command = require(file);
+    try{
 
-    client.commands.set(
+        const command = require(file);
 
-        command.data.name,
+        client.commands.set(
 
-        command
+            command.data.name,
 
-    );
+            command
+
+        );
+
+    }
+
+    catch(error){
+
+        console.log(
+            "Command Load Error:",
+            file,
+            error.message
+        );
+
+    }
 
 }
 
 
 
 
-// ================================
+
+
+
+
+// ===============================
 // BUTTONS
-// ================================
+// ===============================
 
 const buttons = [
 
     "./buttons/leave_vouch",
+
     "./buttons/giveaway_enter",
-    "./buttons/ticket_close"
+
+    "./buttons/ticket_close",
+
+    "./buttons/claim_ticket",
+
+    "./buttons/close_ticket"
 
 ];
 
 
+
+
+
 for(const file of buttons){
 
-    const button = require(file);
 
-    client.buttons.set(
+    try{
 
-        button.customId,
 
-        button
+        const button = require(file);
 
-    );
+
+        client.buttons.set(
+
+            button.customId,
+
+            button
+
+        );
+
+
+    }
+
+
+    catch(error){
+
+
+        console.log(
+
+            "Button Load Error:",
+
+            file,
+
+            error.message
+
+        );
+
+
+    }
+
 
 }
 
@@ -102,26 +169,36 @@ for(const file of buttons){
 
 
 
-// ================================
+
+
+
+// ===============================
 // READY
-// ================================
+// ===============================
 
 client.once("ready",()=>{
 
 
-console.log(
+    console.log(
 
-`💎 ${client.user.tag} is online`
+        `💎 ${client.user.tag} is online`
 
-);
+    );
 
 
 
-client.user.setActivity(
+    client.user.setActivity(
 
-"Sinner Services V2 | Vouches"
+        "Sinner Services V2 | Orders"
 
-);
+    );
+
+
+
+    // START WEBSITE API
+
+    startWebsiteAPI(client);
+
 
 
 });
@@ -131,9 +208,12 @@ client.user.setActivity(
 
 
 
-// ================================
+
+
+
+// ===============================
 // INTERACTIONS
-// ================================
+// ===============================
 
 client.on(
 
@@ -145,12 +225,14 @@ async interaction=>{
 try{
 
 
+
+// SLASH COMMANDS
+
 if(interaction.isChatInputCommand()){
 
 
-const command =
 
-client.commands.get(
+const command = client.commands.get(
 
 interaction.commandName
 
@@ -160,27 +242,30 @@ interaction.commandName
 
 if(command){
 
-await command.execute(
 
-interaction
-
-);
-
-}
+await command.execute(interaction);
 
 
 }
 
 
 
+}
 
+
+
+
+
+
+
+
+// BUTTONS
 
 if(interaction.isButton()){
 
 
-const button =
 
-client.buttons.get(
+const button = client.buttons.get(
 
 interaction.customId
 
@@ -190,55 +275,74 @@ interaction.customId
 
 if(button){
 
-await button.execute(
 
-interaction
-
-);
-
-}
+await button.execute(interaction);
 
 
 }
 
+else{
+
+
+await interaction.reply({
+
+content:"❌ Button not found.",
+
+ephemeral:true
+
+}).catch(()=>{});
+
+
+}
+
+
+
+}
 
 
 
 
+
+
+
+
+
+// SELECT MENUS
 
 if(interaction.isStringSelectMenu()){
 
 
-if(
 
-interaction.customId === "ticket_select"
-
-){
+if(interaction.customId === "ticket_select"){
 
 
-const menu =
 
-require("./menus/ticket_select");
+const menu = require(
 
-
-await menu.execute(
-
-interaction
+"./menus/ticket_select"
 
 );
 
 
-}
 
-
-}
+await menu.execute(interaction);
 
 
 
 }
+
+
+
+}
+
+
+
+}
+
 
 
 catch(error){
+
 
 
 console.log(
@@ -251,14 +355,12 @@ error
 
 
 
-if(!interaction.replied){
+if(!interaction.replied && !interaction.deferred){
 
 
 await interaction.reply({
 
-content:
-
-"❌ Something went wrong.",
+content:"❌ Something went wrong.",
 
 ephemeral:true
 
@@ -266,6 +368,7 @@ ephemeral:true
 
 
 }
+
 
 
 }
@@ -279,11 +382,14 @@ ephemeral:true
 
 
 
-// ================================
+
+
+// ===============================
 // GIVEAWAY TIMER
-// ================================
+// ===============================
 
 setInterval(async()=>{
+
 
 
 for(const giveaway of client.giveaways){
@@ -304,9 +410,7 @@ giveaway.ended = true;
 
 
 
-const channel =
-
-await client.channels.fetch(
+const channel = await client.channels.fetch(
 
 giveaway.channelId
 
@@ -320,18 +424,18 @@ continue;
 
 
 
-let winner =
-
-"No entries";
 
 
 
-if(giveaway.entries.length > 0){
+let winner = "No entries";
 
 
-const id =
 
-giveaway.entries[
+if(giveaway.entries.length){
+
+
+
+const id = giveaway.entries[
 
 Math.floor(
 
@@ -345,63 +449,57 @@ giveaway.entries.length
 
 
 
-winner =
+winner = `<@${id}>`;
 
-`<@${id}>`;
 
 
 }
 
 
 
-const embed =
 
-new EmbedBuilder()
+
+
+const embed = new EmbedBuilder()
 
 .setColor("#B30000")
 
-.setTitle(
+.setTitle("🎉 Giveaway Ended!")
 
-"🎉 Giveaway Ended!"
+.setDescription(`
 
-)
-
-.setDescription(
-
-`
-🏆 **Winner**
+🏆 Winner:
 
 ${winner}
 
 
-🎁 **Prize**
+
+🎁 Prize:
 
 ${giveaway.prize}
 
 
-👥 **Entries**
+
+👥 Entries:
 
 ${giveaway.entries.length}
 
 
+
 ━━━━━━━━━━━━━━
 
-Congratulations!
-`
+Sinner Services
 
-)
+`)
 
-.setFooter({
-
-text:
-
-"Sinner Services"
-
-});
+.setTimestamp();
 
 
 
-await channel.send({
+
+
+
+channel.send({
 
 embeds:[embed]
 
@@ -412,7 +510,9 @@ embeds:[embed]
 }
 
 
+
 }
+
 
 
 },10000);
@@ -424,9 +524,10 @@ embeds:[embed]
 
 
 
-// ================================
+
+// ===============================
 // MESSAGE EVENTS
-// ================================
+// ===============================
 
 client.on(
 
@@ -438,29 +539,29 @@ async message=>{
 try{
 
 
-const messageEvent =
+const event = require(
 
-require("./events/messageCreate");
-
-
-await messageEvent.execute(
-
-message
+"./events/messageCreate"
 
 );
+
+
+await event.execute(message);
 
 
 
 }
 
+
 catch(error){
+
 
 
 console.log(
 
-"Message Error:",
+"Message Event Error:",
 
-error
+error.message
 
 );
 
@@ -476,20 +577,11 @@ error
 
 
 
-// ================================
-// WEBSITE API
-// ================================
 
-startWebsiteAPI(client);
-
-
-
-
-
-
-// ================================
+// ===============================
 // LOGIN
-// ================================
+// ===============================
+
 
 client.login(
 
