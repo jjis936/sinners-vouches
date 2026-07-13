@@ -11,23 +11,52 @@ const {
 } = require("discord.js");
 
 
+
 const app = express();
 
 
-// Allow CodePen + websites to connect
+
+// ===============================
+// WEBSITE CONNECTION SETTINGS
+// ===============================
+
+
 app.use(cors({
+
     origin: "*",
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"]
+
+    methods: [
+        "GET",
+        "POST",
+        "OPTIONS"
+    ],
+
+    allowedHeaders: [
+        "Content-Type"
+    ]
+
 }));
+
 
 app.use(express.json());
 
 
 
+
+
+// ===============================
+// DISCORD SETTINGS
+// ===============================
+
+
 const GUILD_ID = "1500601982740856875";
+
 const TICKET_CATEGORY = "1521521002545152170";
+
 const STAFF_ROLE = "1520900962867216506";
+
+
+
 
 
 
@@ -37,9 +66,15 @@ function startWebsiteAPI(client){
 
 
 
+
+
+// TEST PAGE
+
 app.get("/", (req,res)=>{
 
-    res.send("Sinner Services Website API Online");
+    res.status(200).send(
+        "Sinner Services Website API Online"
+    );
 
 });
 
@@ -48,11 +83,8 @@ app.get("/", (req,res)=>{
 
 
 
-app.options("/create-order", cors());
 
-
-
-
+// CREATE TICKET
 
 app.post("/create-order", async(req,res)=>{
 
@@ -60,21 +92,29 @@ app.post("/create-order", async(req,res)=>{
 try{
 
 
+
+console.log(
+    "Website order received:",
+    req.body
+);
+
+
+
+
 const {
-    customer,
-    service,
-    package,
-    price,
-    notes
+
+customer,
+
+service,
+
+package,
+
+price,
+
+notes
+
+
 } = req.body;
-
-
-
-
-
-console.log("Website Order Received:");
-
-console.log(req.body);
 
 
 
@@ -84,17 +124,22 @@ const guild = client.guilds.cache.get(GUILD_ID);
 
 
 
+
+
 if(!guild){
+
 
 return res.status(404).json({
 
 success:false,
 
-error:"Guild not found"
+error:"Discord server not found"
 
 });
 
+
 }
+
 
 
 
@@ -104,7 +149,9 @@ error:"Guild not found"
 const ticket = await guild.channels.create({
 
 
-name:`ticket-${customer}`
+name:
+
+`ticket-${customer}`
 
 .toLowerCase()
 
@@ -112,11 +159,16 @@ name:`ticket-${customer}`
 
 
 
-type:ChannelType.GuildText,
+type:
+
+ChannelType.GuildText,
 
 
 
-parent:TICKET_CATEGORY,
+parent:
+
+TICKET_CATEGORY,
+
 
 
 
@@ -135,6 +187,7 @@ PermissionFlagsBits.ViewChannel
 ]
 
 },
+
 
 
 
@@ -166,11 +219,18 @@ PermissionFlagsBits.ReadMessageHistory
 
 
 
+
+
 const embed = new EmbedBuilder()
+
 
 .setColor("#B30000")
 
-.setTitle("💎 Sinner Services Order Ticket")
+
+.setTitle(
+"💎 Sinner Services Order"
+)
+
 
 .setDescription(`
 
@@ -210,6 +270,7 @@ Sinner Services
 
 `)
 
+
 .setTimestamp();
 
 
@@ -220,33 +281,40 @@ Sinner Services
 
 const buttons = new ActionRowBuilder()
 
+
 .addComponents(
+
 
 new ButtonBuilder()
 
 .setCustomId("claim_ticket")
 
-.setLabel("👋 Claim Ticket")
+.setLabel("Claim")
 
 .setStyle(ButtonStyle.Primary),
+
+
 
 
 new ButtonBuilder()
 
 .setCustomId("close_ticket")
 
-.setLabel("🔒 Close Ticket")
+.setLabel("Close")
 
 .setStyle(ButtonStyle.Danger),
+
+
 
 
 new ButtonBuilder()
 
 .setCustomId("transcript")
 
-.setLabel("📄 Transcript")
+.setLabel("Transcript")
 
 .setStyle(ButtonStyle.Secondary)
+
 
 );
 
@@ -255,9 +323,12 @@ new ButtonBuilder()
 
 
 
+
 await ticket.send({
 
-content:`<@&${STAFF_ROLE}> New website order received!`,
+content:
+
+`<@&${STAFF_ROLE}> New website order!`,
 
 embeds:[embed],
 
@@ -269,13 +340,17 @@ components:[buttons]
 
 
 
+
+
 res.json({
 
 success:true,
 
-ticketID:ticket.id
+ticket:ticket.id
 
 });
+
+
 
 
 
@@ -285,12 +360,10 @@ catch(error){
 
 
 console.error(
-
-"Ticket Error:",
-
+"Website API Error:",
 error
-
 );
+
 
 
 res.status(500).json({
@@ -305,6 +378,7 @@ error:error.message
 }
 
 
+
 });
 
 
@@ -312,26 +386,30 @@ error:error.message
 
 
 
-app.listen(
 
-process.env.PORT || 3000,
+// START SERVER
 
-()=>{
+
+const PORT = process.env.PORT || 3000;
+
+
+app.listen(PORT,"0.0.0.0",()=>{
+
 
 console.log(
 
-"🌐 Website API Online"
-
-);
-
-}
-
+`🌐 Website API Online on port ${PORT}`
 
 );
 
 
+});
+
+
 
 }
+
+
 
 
 
