@@ -11,22 +11,31 @@ const {
 } = require("discord.js");
 
 
+const database = require("./database");
+
+
+
 const app = express();
 
 
+
 app.use(cors({
-    origin: "*",
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type"]
+
+    origin:"*",
+
+    methods:["GET","POST"],
+
+    allowedHeaders:["Content-Type"]
+
 }));
+
+
 
 app.use(express.json());
 
 
 
-// ===============================
-// DISCORD SETTINGS
-// ===============================
+
 
 const GUILD_ID = "1500601982740856875";
 
@@ -38,15 +47,18 @@ const STAFF_ROLE = "1520900962867216506";
 
 
 
+
 function startWebsiteAPI(client){
 
 
 
-// TEST PAGE
 
-app.get("/", (req,res)=>{
+
+app.get("/",(req,res)=>{
+
 
     res.send("Sinner Services API Online");
+
 
 });
 
@@ -56,18 +68,12 @@ app.get("/", (req,res)=>{
 
 
 
-// CREATE ORDER TICKET
+
 
 app.post("/create-order", async(req,res)=>{
 
 
 try{
-
-
-console.log(
-    "Website order received:",
-    req.body
-);
 
 
 
@@ -83,20 +89,50 @@ price,
 
 notes
 
+
 } = req.body;
 
 
 
 
 
-const guild = client.guilds.cache.get(GUILD_ID);
+// SAVE ORDER
+
+const order = database.createOrder({
+
+
+customer,
+
+service,
+
+package,
+
+price,
+
+notes
+
+
+});
+
+
+
+
+
+
+
+const guild = client.guilds.cache.get(
+
+GUILD_ID
+
+);
+
 
 
 
 if(!guild){
 
 
-return res.status(404).json({
+return res.json({
 
 success:false,
 
@@ -113,16 +149,17 @@ error:"Guild not found"
 
 
 
+
 const ticket = await guild.channels.create({
 
 
 name:
 
-`ticket-${customer}`
+`${order.id}-${customer}`
 
 .toLowerCase()
 
-.replace(/[^a-z0-9]/g,""),
+.replace(/[^a-z0-9-]/g,""),
 
 
 
@@ -135,7 +172,6 @@ ChannelType.GuildText,
 parent:
 
 TICKET_CATEGORY,
-
 
 
 
@@ -157,7 +193,6 @@ PermissionFlagsBits.ViewChannel
 
 
 
-
 {
 
 id:STAFF_ROLE,
@@ -175,7 +210,9 @@ PermissionFlagsBits.ReadMessageHistory
 }
 
 
+
 ]
+
 
 
 });
@@ -190,11 +227,21 @@ PermissionFlagsBits.ReadMessageHistory
 
 const embed = new EmbedBuilder()
 
+
 .setColor("#B30000")
 
-.setTitle("💎 Sinner Services Order Ticket")
+
+.setTitle("💎 Sinner Services Order")
+
 
 .setDescription(`
+
+
+**Order ID**
+
+${order.id}
+
+
 
 **Customer**
 
@@ -220,6 +267,12 @@ $${price}
 
 
 
+**Status**
+
+🟡 Pending
+
+
+
 **Notes**
 
 ${notes || "None"}
@@ -232,6 +285,7 @@ Sinner Services
 
 `)
 
+
 .setTimestamp();
 
 
@@ -241,7 +295,9 @@ Sinner Services
 
 
 
+
 const buttons = new ActionRowBuilder()
+
 
 .addComponents(
 
@@ -259,22 +315,34 @@ new ButtonBuilder()
 
 new ButtonBuilder()
 
-.setCustomId("close_ticket")
+.setCustomId("order_progress")
 
-.setLabel("🔒 Close")
+.setLabel("🔵 Start")
 
-.setStyle(ButtonStyle.Danger),
+.setStyle(ButtonStyle.Secondary),
 
 
 
 
 new ButtonBuilder()
 
-.setCustomId("transcript")
+.setCustomId("order_complete")
 
-.setLabel("📄 Transcript")
+.setLabel("🟢 Complete")
 
-.setStyle(ButtonStyle.Secondary)
+.setStyle(ButtonStyle.Success),
+
+
+
+
+new ButtonBuilder()
+
+.setCustomId("close_ticket")
+
+.setLabel("🔒 Close")
+
+.setStyle(ButtonStyle.Danger)
+
 
 
 );
@@ -292,10 +360,12 @@ await ticket.send({
 
 content:
 
-`<@&${STAFF_ROLE}> New website order received!`,
+`<@&${STAFF_ROLE}> New Order Received!`,
+
 
 
 embeds:[embed],
+
 
 
 components:[buttons]
@@ -309,11 +379,18 @@ components:[buttons]
 
 
 
+
 res.json({
+
 
 success:true,
 
+
+order:order.id,
+
+
 ticket:ticket.id
+
 
 });
 
@@ -323,12 +400,11 @@ ticket:ticket.id
 
 }
 
-
 catch(error){
 
 
 
-console.error(
+console.log(
 
 "Website API Error:",
 
@@ -340,11 +416,15 @@ error
 
 res.status(500).json({
 
+
 success:false,
+
 
 error:error.message
 
+
 });
+
 
 
 }
@@ -359,20 +439,28 @@ error:error.message
 
 
 
-const PORT = process.env.PORT || 3000;
 
 
-app.listen(PORT,"0.0.0.0",()=>{
+app.listen(
+
+process.env.PORT || 8080,
+
+"0.0.0.0",
+
+()=>{
 
 
 console.log(
 
-`🌐 API listening on ${PORT}`
+"🌐 API listening"
 
 );
 
 
-});
+}
+
+);
+
 
 
 }
