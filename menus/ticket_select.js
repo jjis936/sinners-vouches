@@ -10,52 +10,48 @@ const {
 
 module.exports = {
 
-
     customId: "ticket_select",
-
 
 
     async execute(interaction){
 
 
-        const choice =
-        interaction.values[0];
+        const choice = interaction.values[0];
 
 
-
-        let service = "Unknown";
-
+        let subject = "General Support";
 
 
         if(choice === "champions"){
 
-            service = "🏆 Champions Quest";
+            subject = "🏆 Champions Quest Support";
 
         }
 
 
         if(choice === "warzone"){
 
-            service = "⚔️ Warzone Rank Boost";
+            subject = "⚔️ Warzone Support";
 
         }
 
 
         if(choice === "multiplayer"){
 
-            service = "🔥 MP Rank Boost";
+            subject = "🔥 Multiplayer Support";
 
         }
 
 
 
-        const existing =
 
-        interaction.guild.channels.cache.find(
+        const existing = interaction.guild.channels.cache.find(
 
             channel =>
+
             channel.name ===
-            `ticket-${interaction.user.username}`
+
+            `support-${interaction.user.username.toLowerCase()}`
 
         );
 
@@ -63,39 +59,45 @@ module.exports = {
 
         if(existing){
 
-
             return interaction.reply({
 
                 content:
-                "❌ You already have an open ticket.",
+                "❌ You already have an open support ticket.",
 
                 ephemeral:true
 
             });
 
-
         }
 
 
 
-        const channel =
 
-        await interaction.guild.channels.create({
+
+
+        const channel = await interaction.guild.channels.create({
+
 
             name:
-            `ticket-${interaction.user.username}`,
+
+            `support-${interaction.user.username}`
+
+            .toLowerCase(),
+
+
 
             type:
+
             ChannelType.GuildText,
 
 
 
             permissionOverwrites:[
 
+
                 {
 
-                    id:
-                    interaction.guild.id,
+                    id:interaction.guild.id,
 
                     deny:[
 
@@ -106,10 +108,10 @@ module.exports = {
                 },
 
 
+
                 {
 
-                    id:
-                    interaction.user.id,
+                    id:interaction.user.id,
 
                     allow:[
 
@@ -123,79 +125,97 @@ module.exports = {
 
                 }
 
+
             ]
+
 
         });
 
 
 
 
-        const embed =
 
-        new EmbedBuilder()
+
+
+        const embed = new EmbedBuilder()
+
 
         .setColor("#B30000")
 
-        .setTitle("💎 Sinner Services Ticket")
 
-        .setDescription(
-`
+        .setTitle("💎 Sinner Services Support")
+
+
+        .setDescription(`
+
 👤 **Customer**
+
 ${interaction.user}
 
-📦 **Service**
-${service}
+
+
+📌 **Reason**
+
+${subject}
+
+
 
 ━━━━━━━━━━━━━━━━━━
 
-Please provide:
 
-🎮 Activision ID:
-🎯 Current Rank:
-🚀 Desired Rank:
-📝 Additional Details:
+Please explain what you need help with.
 
-A staff member will assist you shortly.
-`
-        )
+
+A staff member will respond soon.
+
+
+`)
+
 
         .setFooter({
 
-            text:
-            "Sinner Services"
+            text:"Sinner Services Support"
 
         })
+
 
         .setTimestamp();
 
 
 
 
-        const closeButton =
 
-        new ButtonBuilder()
+
+
+
+        const close = new ButtonBuilder()
+
 
         .setCustomId("ticket_close")
 
-        .setLabel("🔒 Close Ticket")
+
+        .setLabel("🔒 Close")
+
 
         .setStyle(ButtonStyle.Danger);
 
 
 
-        const row =
 
-        new ActionRowBuilder()
 
-        .addComponents(closeButton);
+        const row = new ActionRowBuilder()
+
+        .addComponents(close);
+
+
+
 
 
 
 
         await channel.send({
 
-            content:
-            `${interaction.user}`,
+            content:`${interaction.user}`,
 
             embeds:[embed],
 
@@ -206,15 +226,18 @@ A staff member will assist you shortly.
 
 
 
+
+
+
         await interaction.reply({
 
             content:
-            `✅ Ticket created: ${channel}`,
+
+            `✅ Support ticket created: ${channel}`,
 
             ephemeral:true
 
         });
-
 
 
     }
