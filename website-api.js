@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 
 const {
     ChannelType,
@@ -12,10 +13,18 @@ const {
 
 const app = express();
 
+
+// Allow website connection
+app.use(cors());
+
 app.use(express.json());
 
 
+
+// ===============================
 // DISCORD SETTINGS
+// ===============================
+
 
 const GUILD_ID = "1500601982740856875";
 
@@ -26,100 +35,85 @@ const STAFF_ROLE = "1520900962867216506";
 
 
 
-// START WEBSITE API
+
+// ===============================
+// START API
+// ===============================
+
 
 function startWebsiteAPI(client){
 
 
-    app.post("/create-order", async (req, res) => {
+
+app.get("/", (req,res)=>{
 
 
-        try {
+res.send("Sinner Services Website API Online");
 
 
-            const {
-                customer,
-                service,
-                package,
-                price,
-                notes
-
-            } = req.body;
-
-
-
-            const guild = client.guilds.cache.get(GUILD_ID);
-
-
-
-            if(!guild){
-
-                return res.status(404).json({
-
-                    error: "Server not found"
-
-                });
-
-            }
+});
 
 
 
 
-            const ticket = await guild.channels.create({
-
-                name:
-
-                `ticket-${customer}`
-
-                .toLowerCase()
-
-                .replace(/[^a-z0-9]/g, ""),
 
 
-                type: ChannelType.GuildText,
+app.post("/create-order", async(req,res)=>{
 
 
-                parent: TICKET_CATEGORY,
-
-
-                permissionOverwrites:[
-
-
-                    {
-
-                        id: guild.roles.everyone.id,
-
-                        deny:[
-
-                            PermissionFlagsBits.ViewChannel
-
-                        ]
-
-                    },
+try{
 
 
 
-                    {
+const {
 
-                        id: STAFF_ROLE,
+customer,
 
-                        allow:[
+service,
 
-                            PermissionFlagsBits.ViewChannel,
+package,
 
-                            PermissionFlagsBits.SendMessages,
+price,
 
-                            PermissionFlagsBits.ReadMessageHistory
-
-                        ]
-
-                    }
+notes
 
 
-                ]
+} = req.body;
 
 
-            });
+
+
+
+console.log("New Website Order:");
+
+console.log(req.body);
+
+
+
+
+
+
+const guild = client.guilds.cache.get(GUILD_ID);
+
+
+
+
+if(!guild){
+
+
+return res.status(404).json({
+
+
+success:false,
+
+
+error:"Discord server not found"
+
+
+});
+
+
+}
 
 
 
@@ -127,13 +121,116 @@ function startWebsiteAPI(client){
 
 
 
-            const embed = new EmbedBuilder()
 
-            .setColor("#B30000")
+const ticket = await guild.channels.create({
 
-            .setTitle("💎 Sinner Services Order Ticket")
 
-            .setDescription(`
+
+name:
+
+
+`ticket-${customer}`
+
+.toLowerCase()
+
+.replace(/[^a-z0-9]/g,""),
+
+
+
+
+type:
+
+ChannelType.GuildText,
+
+
+
+
+parent:
+
+TICKET_CATEGORY,
+
+
+
+
+
+permissionOverwrites:[
+
+
+
+{
+
+
+id:guild.roles.everyone.id,
+
+
+deny:[
+
+PermissionFlagsBits.ViewChannel
+
+]
+
+
+},
+
+
+
+
+
+{
+
+
+id:STAFF_ROLE,
+
+
+allow:[
+
+
+PermissionFlagsBits.ViewChannel,
+
+
+PermissionFlagsBits.SendMessages,
+
+
+PermissionFlagsBits.ReadMessageHistory
+
+
+]
+
+
+}
+
+
+]
+
+
+});
+
+
+
+
+
+
+
+
+
+const embed = new EmbedBuilder()
+
+
+
+.setColor("#B30000")
+
+
+
+.setTitle(
+
+"💎 Sinner Services Order"
+
+)
+
+
+
+.setDescription(`
+
 
 **Customer**
 
@@ -161,7 +258,7 @@ $${price}
 
 **Notes**
 
-${notes || "None"}
+${notes || "No notes"}
 
 
 
@@ -171,142 +268,170 @@ Sinner Services
 
 `)
 
-            .setTimestamp();
 
 
+.setTimestamp();
 
 
 
 
 
-            const buttons = new ActionRowBuilder()
 
-            .addComponents(
 
 
-                new ButtonBuilder()
 
-                .setCustomId("claim_ticket")
+const buttons = new ActionRowBuilder()
 
-                .setLabel("👋 Claim")
 
-                .setStyle(ButtonStyle.Primary),
 
+.addComponents(
 
 
-                new ButtonBuilder()
+new ButtonBuilder()
 
-                .setCustomId("close_ticket")
+.setCustomId("claim_ticket")
 
-                .setLabel("🔒 Close")
+.setLabel("👋 Claim Ticket")
 
-                .setStyle(ButtonStyle.Danger),
+.setStyle(ButtonStyle.Primary),
 
 
 
-                new ButtonBuilder()
 
-                .setCustomId("transcript")
+new ButtonBuilder()
 
-                .setLabel("📄 Transcript")
+.setCustomId("close_ticket")
 
-                .setStyle(ButtonStyle.Secondary)
+.setLabel("🔒 Close Ticket")
 
+.setStyle(ButtonStyle.Danger),
 
-            );
 
 
 
+new ButtonBuilder()
 
+.setCustomId("transcript")
 
+.setLabel("📄 Transcript")
 
+.setStyle(ButtonStyle.Secondary)
 
 
-            await ticket.send({
 
+);
 
-                content:
 
-                `<@&${STAFF_ROLE}> New website order!`,
 
 
-                embeds:[embed],
 
 
-                components:[buttons]
 
 
-            });
 
+await ticket.send({
 
 
 
+content:
 
+`<@&${STAFF_ROLE}> New website order!`,
 
 
-            res.json({
 
+embeds:[embed],
 
-                success:true,
 
 
-                ticketID: ticket.id
+components:[buttons]
 
 
-            });
 
+});
 
 
 
 
-        }
 
 
-        catch(error){
 
+res.json({
 
-            console.error(
 
-                "Website Ticket Error:",
+success:true,
 
-                error
 
-            );
+ticket:ticket.id
 
 
-            res.status(500).json({
+});
 
 
-                error:"Failed to create ticket"
 
-
-            });
-
-
-        }
-
-
-    });
-
-
-
-
-
-
-    app.listen(3000,()=>{
-
-
-        console.log(
-
-            "🌐 Website API Online"
-
-        );
-
-
-    });
 
 
 }
+
+catch(error){
+
+
+
+console.error(
+
+"Website API Error:",
+
+error
+
+);
+
+
+
+res.status(500).json({
+
+
+success:false,
+
+
+error:error.message
+
+
+});
+
+
+
+}
+
+
+
+});
+
+
+
+
+
+
+
+
+app.listen(
+
+process.env.PORT || 3000,
+
+
+()=>{
+
+
+console.log(
+
+"🌐 Website API Online"
+
+);
+
+
+});
+
+
+}
+
 
 
 
