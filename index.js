@@ -9,6 +9,9 @@ const {
 
 const config = require("./config");
 
+const startWebsiteAPI = require("./website-api");
+
+
 
 const client = new Client({
 
@@ -31,6 +34,7 @@ client.commands = new Collection();
 client.buttons = new Collection();
 
 client.giveaways = [];
+
 
 
 
@@ -66,6 +70,7 @@ for(const file of commands){
 
 
 
+
 // ================================
 // BUTTONS
 // ================================
@@ -92,6 +97,8 @@ for(const file of buttons){
     );
 
 }
+
+
 
 
 
@@ -122,6 +129,8 @@ client.user.setActivity(
 
 
 
+
+
 // ================================
 // INTERACTIONS
 // ================================
@@ -135,8 +144,6 @@ async interaction=>{
 
 try{
 
-
-// SLASH COMMANDS
 
 if(interaction.isChatInputCommand()){
 
@@ -167,7 +174,6 @@ interaction
 
 
 
-// BUTTONS
 
 if(interaction.isButton()){
 
@@ -198,7 +204,7 @@ interaction
 
 
 
-// DROPDOWN MENUS
+
 
 if(interaction.isStringSelectMenu()){
 
@@ -266,6 +272,9 @@ ephemeral:true
 
 
 });
+
+
+
 
 
 
@@ -411,6 +420,10 @@ embeds:[embed]
 
 
 
+
+
+
+
 // ================================
 // MESSAGE EVENTS
 // ================================
@@ -437,6 +450,7 @@ message
 );
 
 
+
 }
 
 catch(error){
@@ -455,6 +469,20 @@ error
 
 
 });
+
+
+
+
+
+
+
+// ================================
+// WEBSITE API
+// ================================
+
+startWebsiteAPI(client);
+
+
 
 
 
