@@ -46,22 +46,18 @@ client.giveaways = new Map();
 
 
 
+
 // ===============================
-// COMMANDS
+// LOAD COMMANDS
 // ===============================
 
 const commands = [
 
     "./commands/panel",
-
     "./commands/vouchstats",
-
     "./commands/post",
-
     "./commands/embed",
-
     "./commands/giveaway",
-
     "./commands/ticketpanel"
 
 ];
@@ -75,16 +71,12 @@ for(const file of commands){
         const command = require(file);
 
         client.commands.set(
-
             command.data.name,
-
             command
-
         );
 
 
-    }
-    catch(error){
+    }catch(error){
 
         console.log(
             "Command Load Error:",
@@ -100,20 +92,18 @@ for(const file of commands){
 
 
 
+
+
 // ===============================
-// BUTTONS
+// LOAD BUTTONS
 // ===============================
 
 const buttons = [
 
     "./buttons/leave_vouch",
-
     "./buttons/giveaway_enter",
-
     "./buttons/ticket_close",
-
     "./buttons/claim_ticket",
-
     "./buttons/close_ticket"
 
 ];
@@ -122,10 +112,13 @@ const buttons = [
 
 for(const file of buttons){
 
+
     try{
 
 
-        const button = require(file);
+        const button =
+        require(file);
+
 
 
         client.buttons.set(
@@ -137,8 +130,7 @@ for(const file of buttons){
         );
 
 
-    }
-    catch(error){
+    }catch(error){
 
 
         console.log(
@@ -154,7 +146,68 @@ for(const file of buttons){
 
     }
 
+
 }
+
+
+
+
+
+
+
+
+// ===============================
+// LOAD MODALS
+// ===============================
+
+const modals = [
+
+    "./modals/vouch_form"
+
+];
+
+
+
+for(const file of modals){
+
+
+    try{
+
+
+        const modal =
+        require(file);
+
+
+
+        client.modals.set(
+
+            modal.customId,
+
+            modal
+
+        );
+
+
+    }catch(error){
+
+
+        console.log(
+
+            "Modal Load Error:",
+
+            file,
+
+            error.message
+
+        );
+
+
+    }
+
+
+}
+
+
 
 
 
@@ -175,7 +228,6 @@ client.once("ready",()=>{
     );
 
 
-
     client.user.setActivity(
 
         "Sinner Services V2 | Orders"
@@ -183,11 +235,12 @@ client.once("ready",()=>{
     );
 
 
-
     startWebsiteAPI(client);
 
 
 });
+
+
 
 
 
@@ -210,7 +263,9 @@ try{
 
 
 
-// COMMANDS
+// ===============================
+// SLASH COMMANDS
+// ===============================
 
 if(interaction.isChatInputCommand()){
 
@@ -219,6 +274,7 @@ if(interaction.isChatInputCommand()){
     client.commands.get(
         interaction.commandName
     );
+
 
 
     if(command){
@@ -235,8 +291,9 @@ if(interaction.isChatInputCommand()){
 
 
 
-
+// ===============================
 // BUTTONS
+// ===============================
 
 if(interaction.isButton()){
 
@@ -247,24 +304,11 @@ if(interaction.isButton()){
     );
 
 
+
     if(button){
 
 
         await button.execute(interaction);
-
-
-    }
-    else{
-
-
-        await interaction.reply({
-
-            content:
-            "❌ Button not found.",
-
-            ephemeral:true
-
-        }).catch(()=>{});
 
 
     }
@@ -278,7 +322,52 @@ if(interaction.isButton()){
 
 
 
+
+// ===============================
+// MODALS
+// ===============================
+
+if(interaction.isModalSubmit()){
+
+
+    const modal =
+    client.modals.get(
+        interaction.customId
+    );
+
+
+
+    if(modal){
+
+
+        await modal.execute(interaction);
+
+
+    }
+    else{
+
+
+        console.log(
+
+            "Modal not found:",
+            interaction.customId
+
+        );
+
+
+    }
+
+
+}
+
+
+
+
+
+
+// ===============================
 // SELECT MENUS
+// ===============================
 
 if(interaction.isStringSelectMenu()){
 
@@ -302,42 +391,46 @@ if(interaction.isStringSelectMenu()){
 
 
 
+
+}catch(error){
+
+
+console.log(
+
+"Interaction Error:",
+
+error
+
+);
+
+
+
+if(
+!interaction.replied &&
+!interaction.deferred
+){
+
+
+await interaction.reply({
+
+content:
+"❌ Something went wrong.",
+
+ephemeral:true
+
+}).catch(()=>{});
+
+
 }
-catch(error){
 
-
-    console.log(
-
-        "Interaction Error:",
-
-        error
-
-    );
-
-
-    if(
-        !interaction.replied &&
-        !interaction.deferred
-    ){
-
-
-        await interaction.reply({
-
-            content:
-            "❌ Something went wrong.",
-
-            ephemeral:true
-
-        }).catch(()=>{});
-
-
-    }
 
 
 }
 
 
 });
+
+
 
 
 
@@ -352,73 +445,73 @@ catch(error){
 setInterval(async()=>{
 
 
-    for(
-        const giveaway 
-        of client.giveaways.values()
-    ){
+for(
+const giveaway 
+of client.giveaways.values()
+){
 
 
 
-        if(giveaway.ended)
-            continue;
+if(giveaway.ended)
+
+continue;
 
 
 
-        if(Date.now() >= giveaway.endTime){
-
-
-            giveaway.ended = true;
+if(Date.now() >= giveaway.endTime){
 
 
 
-            const channel =
-            await client.channels.fetch(
-                giveaway.channelId
-            )
-            .catch(()=>null);
+giveaway.ended = true;
 
 
 
-            if(!channel)
-                continue;
+const channel =
+await client.channels.fetch(
+giveaway.channelId
+)
+.catch(()=>null);
 
 
 
-            let winner = null;
-
-
-
-            if(giveaway.entries.length > 0){
-
-
-                winner =
-                giveaway.entries[
-                    Math.floor(
-                        Math.random() *
-                        giveaway.entries.length
-                    )
-                ];
-
-
-            }
+if(!channel)
+continue;
 
 
 
 
 
-            const embed =
-            new EmbedBuilder()
+let winner = null;
 
 
-            .setColor("#b026ff")
+
+if(giveaway.entries.length){
 
 
-            .setTitle(
-                "🎉 GIVEAWAY ENDED"
-            )
+winner =
+giveaway.entries[
+Math.floor(
+Math.random() *
+giveaway.entries.length
+)
+];
 
 
-            .setDescription(
+}
+
+
+
+
+const embed =
+new EmbedBuilder()
+
+.setColor("#b026ff")
+
+.setTitle(
+"🎉 GIVEAWAY ENDED"
+)
+
+.setDescription(
 `
 🎁 **Prize**
 
@@ -439,50 +532,49 @@ winner
 ${giveaway.entries.length}
 
 
-━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━
 
 💜 Sinner Services
 `
-            )
+)
 
-
-            .setTimestamp();
-
-
+.setTimestamp();
 
 
 
 
-            await channel.send({
-
-                content:
-
-                winner
-
-                ? 
-                `🎊 Congratulations <@${winner}>! You won **${giveaway.prize}**!`
-
-                :
-
-                "⚠ Giveaway ended with no valid entries.",
 
 
-                embeds:[embed]
+await channel.send({
+
+content:
+
+winner
+
+?
+
+`🎊 Congratulations <@${winner}>! You won **${giveaway.prize}**!`
+
+:
+
+"⚠ Giveaway ended with no valid entries.",
 
 
-            });
+embeds:[embed]
 
-
-
-        }
+});
 
 
 
-    }
+}
 
+
+
+}
 
 
 },10000);
+
 
 
 
@@ -507,7 +599,7 @@ try{
 
 const event =
 require(
-    "./events/messageCreate"
+"./events/messageCreate"
 );
 
 
@@ -516,8 +608,7 @@ await event.execute(message);
 
 
 
-}
-catch(error){
+}catch(error){
 
 
 console.log(
@@ -533,7 +624,6 @@ error.message
 
 
 });
-
 
 
 
