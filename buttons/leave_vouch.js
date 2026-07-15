@@ -14,17 +14,19 @@ module.exports = {
     async execute(interaction) {
 
 
-        const modal = new ModalBuilder()
+        const modal =
+        new ModalBuilder()
 
         .setCustomId("vouch_form")
 
         .setTitle(
-            "Sinner Services Vouch"
+            "💎 Sinner Services Vouch"
         );
 
 
 
-        const rating = new TextInputBuilder()
+        const rating =
+        new TextInputBuilder()
 
         .setCustomId("rating")
 
@@ -40,31 +42,14 @@ module.exports = {
             "Example: 5"
         )
 
-        .setRequired(true);
-
-
-
-        const feedback = new TextInputBuilder()
-
-        .setCustomId("feedback")
-
-        .setLabel(
-            "💬 Feedback"
-        )
-
-        .setStyle(
-            TextInputStyle.Paragraph
-        )
-
-        .setPlaceholder(
-            "Describe your experience..."
-        )
+        .setMaxLength(1)
 
         .setRequired(true);
 
 
 
-        const service = new TextInputBuilder()
+        const service =
+        new TextInputBuilder()
 
         .setCustomId("service")
 
@@ -77,8 +62,33 @@ module.exports = {
         )
 
         .setPlaceholder(
-            "Example: BO7 Boosting"
+            "Example: Premium Service"
         )
+
+        .setMaxLength(50)
+
+        .setRequired(true);
+
+
+
+        const feedback =
+        new TextInputBuilder()
+
+        .setCustomId("feedback")
+
+        .setLabel(
+            "💬 Your Review"
+        )
+
+        .setStyle(
+            TextInputStyle.Paragraph
+        )
+
+        .setPlaceholder(
+            "Tell us about your experience with Sinner Services..."
+        )
+
+        .setMaxLength(1000)
 
         .setRequired(true);
 
@@ -91,11 +101,11 @@ module.exports = {
 
 
             new ActionRowBuilder()
-            .addComponents(feedback),
+            .addComponents(service),
 
 
             new ActionRowBuilder()
-            .addComponents(service)
+            .addComponents(feedback)
 
         );
 
