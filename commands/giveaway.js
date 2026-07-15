@@ -13,7 +13,7 @@ module.exports = {
     data: new SlashCommandBuilder()
 
         .setName("giveaway")
-        .setDescription("Create a giveaway")
+        .setDescription("Create a Sinner Services giveaway")
 
         .addStringOption(option =>
             option
@@ -25,7 +25,7 @@ module.exports = {
         .addIntegerOption(option =>
             option
                 .setName("minutes")
-                .setDescription("How many minutes until it ends")
+                .setDescription("Minutes until giveaway ends")
                 .setRequired(true)
         ),
 
@@ -63,37 +63,39 @@ module.exports = {
 
 
         const endTime =
-        Date.now() + (minutes * 60000);
+        Date.now() + minutes * 60000;
 
 
 
-        const embed =
-        new EmbedBuilder()
+        const embed = new EmbedBuilder()
 
-        .setColor("#B30000")
+        .setColor("#b026ff")
 
         .setTitle("🎉 Sinner Services Giveaway")
 
         .setDescription(
 `
 🎁 **Prize**
-${prize}
+> ${prize}
 
 ⏰ **Ends**
 <t:${Math.floor(endTime / 1000)}:R>
 
 👥 **Entries**
-0
+> 0
 
-━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━
 
-Click below to enter!
+🔥 Click below to enter!
+
+Good luck everyone 💜
 `
         )
 
         .setFooter({
 
-            text:"Sinner Services"
+            text:
+            "Sinner Services • Premium Gaming"
 
         })
 
@@ -108,7 +110,7 @@ Click below to enter!
 
         .setLabel("🎉 Enter Giveaway")
 
-        .setStyle(ButtonStyle.Danger);
+        .setStyle(ButtonStyle.Primary);
 
 
 
@@ -130,44 +132,192 @@ Click below to enter!
 
 
 
-        // Store giveaway in bot memory
-
         if(!interaction.client.giveaways){
 
-            interaction.client.giveaways = [];
+            interaction.client.giveaways = new Map();
 
         }
 
 
 
-        interaction.client.giveaways.push({
+        interaction.client.giveaways.set(
 
-            messageId: message.id,
+            message.id,
 
-            channelId: interaction.channel.id,
+            {
 
-            guildId: interaction.guild.id,
+                messageId: message.id,
 
-            prize: prize,
+                channelId: interaction.channel.id,
 
-            endTime: endTime,
+                guildId: interaction.guild.id,
 
-            entries: [],
+                prize,
 
-            ended:false
+                endTime,
 
-        });
+                entries: [],
+
+                ended:false
+
+            }
+
+        );
 
 
 
         await interaction.reply({
 
             content:
-            "✅ Giveaway created!",
+            "✅ Giveaway created successfully!",
 
             ephemeral:true
 
         });
+
+
+
+        // automatic ending timer
+
+        setTimeout(async()=>{
+
+
+            const giveaway =
+            interaction.client.giveaways.get(message.id);
+
+
+
+            if(!giveaway || giveaway.ended)
+                return;
+
+
+
+            giveaway.ended = true;
+
+
+
+            const channel =
+            interaction.guild.channels.cache.get(
+                giveaway.channelId
+            );
+
+
+
+            if(!channel)
+                return;
+
+
+
+            let winner = null;
+
+
+
+            if(giveaway.entries.length > 0){
+
+                winner =
+                giveaway.entries[
+                    Math.floor(
+                        Math.random() *
+                        giveaway.entries.length
+                    )
+                ];
+
+            }
+
+
+
+            const endedEmbed =
+            new EmbedBuilder()
+
+            .setColor("#22c55e")
+
+            .setTitle("🎉 GIVEAWAY ENDED")
+
+            .setDescription(
+`
+🎁 **Prize**
+> ${giveaway.prize}
+
+
+🏆 **Winner**
+
+${
+winner
+? `<@${winner}>`
+: "No valid entries"
+}
+
+
+👥 **Total Entries**
+${giveaway.entries.length}
+
+
+━━━━━━━━━━━━━━━━━━
+
+Thanks for participating 💜
+`
+            )
+
+            .setFooter({
+
+                text:
+                "Sinner Services"
+
+            })
+
+            .setTimestamp();
+
+
+
+            try{
+
+
+                await message.edit({
+
+                    embeds:[endedEmbed],
+
+                    components:[]
+
+                });
+
+
+
+            }catch(error){
+
+                console.log(
+                    "Could not edit giveaway:",
+                    error
+                );
+
+            }
+
+
+
+            if(winner){
+
+                channel.send({
+
+                    content:
+                    `🎊 Congratulations <@${winner}>! You won **${giveaway.prize}**!`
+
+                });
+
+            }
+            else{
+
+                channel.send({
+
+                    content:
+                    "⚠ Giveaway ended with no valid entries."
+
+                });
+
+            }
+
+
+
+        }, minutes * 60000);
+
 
 
     }
