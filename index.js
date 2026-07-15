@@ -8,14 +8,13 @@ const {
 } = require("discord.js");
 
 const config = require("./config");
-
 const startWebsiteAPI = require("./website-api");
 
 
 
 const client = new Client({
 
-    intents:[
+    intents: [
 
         GatewayIntentBits.Guilds,
 
@@ -30,9 +29,9 @@ const client = new Client({
 
 
 
-// ===============================
+// =================================
 // COLLECTIONS
-// ===============================
+// =================================
 
 client.commands = new Collection();
 
@@ -46,19 +45,25 @@ client.giveaways = new Map();
 
 
 
-
-// ===============================
-// LOAD COMMANDS
-// ===============================
+// =================================
+// COMMAND LOADER
+// =================================
 
 const commands = [
 
+    // Main
     "./commands/panel",
     "./commands/vouchstats",
     "./commands/post",
     "./commands/embed",
     "./commands/giveaway",
-    "./commands/ticketpanel"
+    "./commands/ticketpanel",
+
+    // Moderation
+    "./commands/ban",
+    "./commands/kick",
+    "./commands/warn",
+    "./commands/timeout"
 
 ];
 
@@ -68,21 +73,35 @@ for(const file of commands){
 
     try{
 
+
         const command = require(file);
 
+
         client.commands.set(
+
             command.data.name,
+
             command
+
+        );
+
+
+        console.log(
+            `✅ Loaded command: ${command.data.name}`
         );
 
 
     }catch(error){
 
+
         console.log(
-            "Command Load Error:",
-            file,
+
+            `❌ Command failed: ${file}`,
+
             error.message
+
         );
+
 
     }
 
@@ -93,10 +112,9 @@ for(const file of commands){
 
 
 
-
-// ===============================
-// LOAD BUTTONS
-// ===============================
+// =================================
+// BUTTON LOADER
+// =================================
 
 const buttons = [
 
@@ -130,14 +148,17 @@ for(const file of buttons){
         );
 
 
+        console.log(
+            `✅ Loaded button: ${button.customId}`
+        );
+
+
     }catch(error){
 
 
         console.log(
 
-            "Button Load Error:",
-
-            file,
+            `❌ Button failed: ${file}`,
 
             error.message
 
@@ -145,7 +166,6 @@ for(const file of buttons){
 
 
     }
-
 
 }
 
@@ -155,10 +175,9 @@ for(const file of buttons){
 
 
 
-
-// ===============================
-// LOAD MODALS
-// ===============================
+// =================================
+// MODAL LOADER
+// =================================
 
 const modals = [
 
@@ -188,14 +207,17 @@ for(const file of modals){
         );
 
 
+        console.log(
+            `✅ Loaded modal: ${modal.customId}`
+        );
+
+
     }catch(error){
 
 
         console.log(
 
-            "Modal Load Error:",
-
-            file,
+            `❌ Modal failed: ${file}`,
 
             error.message
 
@@ -203,7 +225,6 @@ for(const file of modals){
 
 
     }
-
 
 }
 
@@ -214,9 +235,9 @@ for(const file of modals){
 
 
 
-// ===============================
-// READY
-// ===============================
+// =================================
+// BOT READY
+// =================================
 
 client.once("ready",()=>{
 
@@ -228,6 +249,7 @@ client.once("ready",()=>{
     );
 
 
+
     client.user.setActivity(
 
         "Sinner Services V2 | Orders"
@@ -235,32 +257,21 @@ client.once("ready",()=>{
     );
 
 
+
     startWebsiteAPI(client);
 
 
 });
-
-
-
-
-
-
-
-
-
-// ===============================
+// =================================
 // INTERACTIONS
-// ===============================
+// =================================
 
 client.on(
-
 "interactionCreate",
-
 async interaction=>{
 
 
 try{
-
 
 
 // ===============================
@@ -276,13 +287,11 @@ if(interaction.isChatInputCommand()){
     );
 
 
-
     if(command){
 
         await command.execute(interaction);
 
     }
-
 
 }
 
@@ -304,19 +313,29 @@ if(interaction.isButton()){
     );
 
 
-
     if(button){
 
 
         await button.execute(interaction);
 
 
+    }else{
+
+
+        await interaction.reply({
+
+            content:
+            "❌ Button not configured.",
+
+            ephemeral:true
+
+        }).catch(()=>{});
+
+
     }
 
 
 }
-
-
 
 
 
@@ -336,22 +355,18 @@ if(interaction.isModalSubmit()){
     );
 
 
-
     if(modal){
 
 
         await modal.execute(interaction);
 
 
-    }
-    else{
+    }else{
 
 
         console.log(
-
-            "Modal not found:",
+            "Unknown modal:",
             interaction.customId
-
         );
 
 
@@ -372,7 +387,9 @@ if(interaction.isModalSubmit()){
 if(interaction.isStringSelectMenu()){
 
 
-    if(interaction.customId === "ticket_select"){
+    if(
+        interaction.customId === "ticket_select"
+    ){
 
 
         const menu =
@@ -391,16 +408,12 @@ if(interaction.isStringSelectMenu()){
 
 
 
-
 }catch(error){
 
 
 console.log(
-
 "Interaction Error:",
-
 error
-
 );
 
 
@@ -413,10 +426,10 @@ if(
 
 await interaction.reply({
 
-content:
-"❌ Something went wrong.",
+    content:
+    "❌ Something went wrong.",
 
-ephemeral:true
+    ephemeral:true
 
 }).catch(()=>{});
 
@@ -424,8 +437,8 @@ ephemeral:true
 }
 
 
-
 }
+
 
 
 });
@@ -437,23 +450,19 @@ ephemeral:true
 
 
 
-
-// ===============================
-// GIVEAWAY TIMER
-// ===============================
+// =================================
+// GIVEAWAY SYSTEM
+// =================================
 
 setInterval(async()=>{
 
 
 for(
-const giveaway 
-of client.giveaways.values()
+const giveaway of client.giveaways.values()
 ){
 
 
-
 if(giveaway.ended)
-
 continue;
 
 
@@ -468,7 +477,7 @@ giveaway.ended = true;
 
 const channel =
 await client.channels.fetch(
-giveaway.channelId
+    giveaway.channelId
 )
 .catch(()=>null);
 
@@ -480,12 +489,11 @@ continue;
 
 
 
-
 let winner = null;
 
 
 
-if(giveaway.entries.length){
+if(giveaway.entries.length > 0){
 
 
 winner =
@@ -498,6 +506,7 @@ giveaway.entries.length
 
 
 }
+
 
 
 
@@ -522,8 +531,10 @@ ${giveaway.prize}
 
 ${
 winner
-? `<@${winner}>`
-: "No valid entries"
+?
+`<@${winner}>`
+:
+"No valid entries"
 }
 
 
@@ -557,7 +568,7 @@ winner
 
 :
 
-"⚠ Giveaway ended with no valid entries.",
+"⚠ Giveaway ended. No one entered.",
 
 
 embeds:[embed]
@@ -566,8 +577,8 @@ embeds:[embed]
 
 
 
-}
 
+}
 
 
 }
@@ -583,14 +594,12 @@ embeds:[embed]
 
 
 
-// ===============================
+// =================================
 // MESSAGE EVENTS
-// ===============================
+// =================================
 
 client.on(
-
 "messageCreate",
-
 async message=>{
 
 
@@ -632,9 +641,10 @@ error.message
 
 
 
-// ===============================
+
+// =================================
 // LOGIN
-// ===============================
+// =================================
 
 client.login(
 
