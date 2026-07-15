@@ -4,28 +4,30 @@ module.exports = {
 
     async execute(interaction) {
 
+
         if (!interaction.client.giveaways) {
 
-            interaction.client.giveaways = [];
+            interaction.client.giveaways = new Map();
 
         }
 
 
-        const giveaway = 
-        interaction.client.giveaways.find(
-            g => g.messageId === interaction.message.id
+
+        const giveaway =
+        interaction.client.giveaways.get(
+            interaction.message.id
         );
+
 
 
         if (!giveaway) {
 
-            console.log("Active giveaways:", interaction.client.giveaways);
-
             return interaction.reply({
 
-                content: "❌ Giveaway not found. Restart the giveaway after restarting the bot.",
+                content:
+                "❌ This giveaway is no longer active.",
 
-                ephemeral: true
+                ephemeral:true
 
             });
 
@@ -33,56 +35,77 @@ module.exports = {
 
 
 
-        if (giveaway.ended) {
+        if(giveaway.ended){
+
 
             return interaction.reply({
 
-                content: "❌ This giveaway has ended.",
+                content:
+                "❌ This giveaway has ended.",
 
-                ephemeral: true
+                ephemeral:true
 
             });
+
 
         }
 
 
 
-        if (giveaway.entries.includes(interaction.user.id)) {
+        if(
+            giveaway.entries.includes(
+                interaction.user.id
+            )
+        ){
+
 
             return interaction.reply({
 
-                content: "❌ You already entered!",
+                content:
+                "❌ You already entered this giveaway!",
 
-                ephemeral: true
+                ephemeral:true
 
             });
+
 
         }
 
 
 
-        giveaway.entries.push(interaction.user.id);
+        giveaway.entries.push(
+            interaction.user.id
+        );
 
 
 
         await interaction.reply({
 
-            content: "🎉 You entered the giveaway!",
+            content:
+            "🎉 You entered the giveaway! Good luck 💜",
 
-            ephemeral: true
+            ephemeral:true
 
         });
 
 
 
-        const embed = interaction.message.embeds[0].data;
+        const oldEmbed =
+        interaction.message.embeds[0];
 
 
-        embed.description = embed.description.replace(
 
-            /👥 \*\*Entries\*\*\n\d+/,
+        const newEmbed =
+        oldEmbed.toJSON();
 
-            `👥 **Entries**\n${giveaway.entries.length}`
+
+
+        newEmbed.description =
+        newEmbed.description.replace(
+
+            /👥 \*\*Entries\*\*\n>?\s*\d+/,
+
+            `👥 **Entries**\n> ${giveaway.entries.length}`
 
         );
 
@@ -90,7 +113,9 @@ module.exports = {
 
         await interaction.message.edit({
 
-            embeds: [embed]
+            embeds:[
+                newEmbed
+            ]
 
         });
 
