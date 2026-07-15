@@ -4,7 +4,7 @@ const { REST, Routes } = require("discord.js");
 
 
 // ================================
-// IDS
+// Sinner Services IDs
 // ================================
 
 const CLIENT_ID = "1525205213827436635";
@@ -14,10 +14,14 @@ const GUILD_ID = "1500601982740856875";
 
 
 // ================================
-// COMMANDS
+// LOAD COMMANDS
 // ================================
 
 const commands = [
+
+    // ================================
+    // MAIN COMMANDS
+    // ================================
 
     require("./commands/panel").data.toJSON(),
 
@@ -29,21 +33,43 @@ const commands = [
 
     require("./commands/giveaway").data.toJSON(),
 
-    require("./commands/ticketpanel").data.toJSON()
+    require("./commands/ticketpanel").data.toJSON(),
+
+
+
+    // ================================
+    // MODERATION COMMANDS
+    // ================================
+
+    require("./commands/ban").data.toJSON(),
+
+    require("./commands/kick").data.toJSON(),
+
+    require("./commands/warn").data.toJSON(),
+
+    require("./commands/timeout").data.toJSON()
 
 ];
 
 
 
+
+
 // ================================
-// REST
+// DISCORD REST
 // ================================
 
 const rest = new REST({
 
-    version:"10"
+    version: "10"
 
-}).setToken(process.env.TOKEN);
+}).setToken(
+
+    process.env.TOKEN
+
+);
+
+
 
 
 
@@ -59,45 +85,57 @@ try{
 
 
 console.log(
-"⏳ Deploying Sinner Services commands..."
+"🚀 Deploying Sinner Services slash commands..."
 );
 
 
 console.log(
-"Client ID:",
-CLIENT_ID
+`📌 Client ID: ${CLIENT_ID}`
 );
 
 
 console.log(
-"Guild ID:",
-GUILD_ID
+`📌 Guild ID: ${GUILD_ID}`
 );
+
+
+console.log(
+`📦 Total Commands: ${commands.length}`
+);
+
+
 
 
 
 await rest.put(
 
-Routes.applicationGuildCommands(
+    Routes.applicationGuildCommands(
 
-CLIENT_ID,
+        CLIENT_ID,
 
-GUILD_ID
+        GUILD_ID
 
-),
+    ),
 
-{
+    {
 
-body: commands
+        body: commands
 
-}
+    }
 
 );
 
 
 
+
+
 console.log(
-"✅ Commands deployed successfully!"
+"✅ Slash commands deployed successfully!"
+);
+
+
+console.log(
+"💎 Sinner Services is updated!"
 );
 
 
@@ -107,8 +145,8 @@ console.log(
 catch(error){
 
 
-console.log(
-"❌ Deploy Error:"
+console.error(
+"❌ Command deployment failed:"
 );
 
 
