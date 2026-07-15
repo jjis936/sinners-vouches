@@ -30,7 +30,6 @@ const client = new Client({
 
 
 
-
 // ===============================
 // COLLECTIONS
 // ===============================
@@ -39,8 +38,9 @@ client.commands = new Collection();
 
 client.buttons = new Collection();
 
-client.giveaways = [];
+client.modals = new Collection();
 
+client.giveaways = new Map();
 
 
 
@@ -82,8 +82,8 @@ for(const file of commands){
 
         );
 
-    }
 
+    }
     catch(error){
 
         console.log(
@@ -95,9 +95,6 @@ for(const file of commands){
     }
 
 }
-
-
-
 
 
 
@@ -123,10 +120,7 @@ const buttons = [
 
 
 
-
-
 for(const file of buttons){
-
 
     try{
 
@@ -144,8 +138,6 @@ for(const file of buttons){
 
 
     }
-
-
     catch(error){
 
 
@@ -162,10 +154,7 @@ for(const file of buttons){
 
     }
 
-
 }
-
-
 
 
 
@@ -195,15 +184,10 @@ client.once("ready",()=>{
 
 
 
-    // START WEBSITE API
-
     startWebsiteAPI(client);
 
 
-
 });
-
-
 
 
 
@@ -226,32 +210,25 @@ try{
 
 
 
-// SLASH COMMANDS
+// COMMANDS
 
 if(interaction.isChatInputCommand()){
 
 
-
-const command = client.commands.get(
-
-interaction.commandName
-
-);
+    const command =
+    client.commands.get(
+        interaction.commandName
+    );
 
 
+    if(command){
 
-if(command){
+        await command.execute(interaction);
 
-
-await command.execute(interaction);
+    }
 
 
 }
-
-
-
-}
-
 
 
 
@@ -264,42 +241,36 @@ await command.execute(interaction);
 if(interaction.isButton()){
 
 
-
-const button = client.buttons.get(
-
-interaction.customId
-
-);
+    const button =
+    client.buttons.get(
+        interaction.customId
+    );
 
 
-
-if(button){
-
-
-await button.execute(interaction);
+    if(button){
 
 
-}
-
-else{
+        await button.execute(interaction);
 
 
-await interaction.reply({
-
-content:"❌ Button not found.",
-
-ephemeral:true
-
-}).catch(()=>{});
+    }
+    else{
 
 
-}
+        await interaction.reply({
 
+            content:
+            "❌ Button not found.",
+
+            ephemeral:true
+
+        }).catch(()=>{});
+
+
+    }
 
 
 }
-
-
 
 
 
@@ -312,21 +283,19 @@ ephemeral:true
 if(interaction.isStringSelectMenu()){
 
 
-
-if(interaction.customId === "ticket_select"){
-
+    if(interaction.customId === "ticket_select"){
 
 
-const menu = require(
-
-"./menus/ticket_select"
-
-);
-
+        const menu =
+        require(
+            "./menus/ticket_select"
+        );
 
 
-await menu.execute(interaction);
+        await menu.execute(interaction);
 
+
+    }
 
 
 }
@@ -334,49 +303,41 @@ await menu.execute(interaction);
 
 
 }
-
-
-
-}
-
-
-
 catch(error){
 
 
+    console.log(
 
-console.log(
+        "Interaction Error:",
 
-"Interaction Error:",
+        error
 
-error
-
-);
-
+    );
 
 
-if(!interaction.replied && !interaction.deferred){
+    if(
+        !interaction.replied &&
+        !interaction.deferred
+    ){
 
 
-await interaction.reply({
+        await interaction.reply({
 
-content:"❌ Something went wrong.",
+            content:
+            "❌ Something went wrong.",
 
-ephemeral:true
+            ephemeral:true
 
-}).catch(()=>{});
+        }).catch(()=>{});
 
 
-}
-
+    }
 
 
 }
 
 
 });
-
-
 
 
 
@@ -391,132 +352,137 @@ ephemeral:true
 setInterval(async()=>{
 
 
-
-for(const giveaway of client.giveaways){
-
-
-
-if(giveaway.ended)
-
-continue;
+    for(
+        const giveaway 
+        of client.giveaways.values()
+    ){
 
 
 
-if(Date.now() >= giveaway.endTime){
+        if(giveaway.ended)
+            continue;
 
 
 
-giveaway.ended = true;
+        if(Date.now() >= giveaway.endTime){
+
+
+            giveaway.ended = true;
 
 
 
-const channel = await client.channels.fetch(
-
-giveaway.channelId
-
-).catch(()=>null);
-
-
-
-if(!channel)
-
-continue;
+            const channel =
+            await client.channels.fetch(
+                giveaway.channelId
+            )
+            .catch(()=>null);
 
 
 
+            if(!channel)
+                continue;
 
 
 
-let winner = "No entries";
+            let winner = null;
 
 
 
-if(giveaway.entries.length){
+            if(giveaway.entries.length > 0){
 
 
-
-const id = giveaway.entries[
-
-Math.floor(
-
-Math.random() *
-
-giveaway.entries.length
-
-)
-
-];
+                winner =
+                giveaway.entries[
+                    Math.floor(
+                        Math.random() *
+                        giveaway.entries.length
+                    )
+                ];
 
 
-
-winner = `<@${id}>`;
-
-
-
-}
+            }
 
 
 
 
 
-
-const embed = new EmbedBuilder()
-
-.setColor("#B30000")
-
-.setTitle("🎉 Giveaway Ended!")
-
-.setDescription(`
-
-🏆 Winner:
-
-${winner}
+            const embed =
+            new EmbedBuilder()
 
 
+            .setColor("#b026ff")
 
-🎁 Prize:
+
+            .setTitle(
+                "🎉 GIVEAWAY ENDED"
+            )
+
+
+            .setDescription(
+`
+🎁 **Prize**
 
 ${giveaway.prize}
 
 
+🏆 **Winner**
 
-👥 Entries:
+${
+winner
+? `<@${winner}>`
+: "No valid entries"
+}
+
+
+👥 **Entries**
 
 ${giveaway.entries.length}
 
 
+━━━━━━━━━━━━━━━━━━
 
-━━━━━━━━━━━━━━
-
-Sinner Services
-
-`)
-
-.setTimestamp();
+💜 Sinner Services
+`
+            )
 
 
+            .setTimestamp();
 
 
 
 
-channel.send({
-
-embeds:[embed]
-
-});
 
 
+            await channel.send({
 
-}
+                content:
+
+                winner
+
+                ? 
+                `🎊 Congratulations <@${winner}>! You won **${giveaway.prize}**!`
+
+                :
+
+                "⚠ Giveaway ended with no valid entries.",
+
+
+                embeds:[embed]
+
+
+            });
 
 
 
-}
+        }
+
+
+
+    }
 
 
 
 },10000);
-
 
 
 
@@ -539,11 +505,11 @@ async message=>{
 try{
 
 
-const event = require(
-
-"./events/messageCreate"
-
+const event =
+require(
+    "./events/messageCreate"
 );
+
 
 
 await event.execute(message);
@@ -551,10 +517,7 @@ await event.execute(message);
 
 
 }
-
-
 catch(error){
-
 
 
 console.log(
@@ -578,10 +541,10 @@ error.message
 
 
 
+
 // ===============================
 // LOGIN
 // ===============================
-
 
 client.login(
 
