@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 
-const path =
+const vouchPath =
 "./database/vouches.json";
 
 
@@ -9,9 +9,8 @@ const cooldownPath =
 "./database/cooldowns.json";
 
 
-
 const COOLDOWN_TIME =
-30 * 60 * 1000; // 30 minutes
+30 * 60 * 1000;
 
 
 
@@ -25,7 +24,6 @@ customId: "vouch_form",
 async execute(interaction){
 
 
-
 let cooldowns = {};
 
 
@@ -33,16 +31,14 @@ let cooldowns = {};
 if(fs.existsSync(cooldownPath)){
 
 
-    cooldowns = JSON.parse(
-
-        fs.readFileSync(
-            cooldownPath
-        )
-
+    cooldowns =
+    JSON.parse(
+        fs.readFileSync(cooldownPath)
     );
 
 
 }
+
 
 
 
@@ -51,40 +47,31 @@ interaction.user.id;
 
 
 
-// ================================
-// CHECK COOLDOWN
-// ================================
+// ===============================
+// COOLDOWN
+// ===============================
 
 
 if(cooldowns[userID]){
 
 
-    const timePassed =
-    Date.now() -
-    cooldowns[userID];
-
-
-
     const remaining =
     COOLDOWN_TIME -
-    timePassed;
+    (
+        Date.now()
+        -
+        cooldowns[userID]
+    );
 
 
 
     if(remaining > 0){
 
 
-        const minutes =
-        Math.ceil(
-            remaining / 60000
-        );
-
-
-
         return interaction.reply({
 
             content:
-            `⏰ You already submitted a vouch. Please wait ${minutes} minutes before submitting another.`,
+            `⏰ You already submitted a vouch. Try again in ${Math.ceil(remaining / 60000)} minutes.`,
 
             ephemeral:true
 
@@ -98,21 +85,17 @@ if(cooldowns[userID]){
 
 
 
-// ================================
-// SAVE VOUCH DATA
-// ================================
+
+
+
+// ===============================
+// DATA
+// ===============================
 
 
 const rating =
 interaction.fields.getTextInputValue(
 "rating"
-);
-
-
-
-const feedback =
-interaction.fields.getTextInputValue(
-"feedback"
 );
 
 
@@ -124,19 +107,33 @@ interaction.fields.getTextInputValue(
 
 
 
+const feedback =
+interaction.fields.getTextInputValue(
+"feedback"
+);
 
-// Validation
+
+
+
+
+const ratingNumber =
+Number(rating);
+
+
+
+
 
 if(
-Number(rating) < 1 ||
-Number(rating) > 5
+isNaN(ratingNumber) ||
+ratingNumber < 1 ||
+ratingNumber > 5
 ){
 
 
 return interaction.reply({
 
 content:
-"❌ Rating must be between 1-5.",
+"❌ Rating must be between 1 and 5.",
 
 ephemeral:true
 
@@ -144,6 +141,8 @@ ephemeral:true
 
 
 }
+
+
 
 
 
@@ -153,7 +152,7 @@ if(feedback.length < 5){
 return interaction.reply({
 
 content:
-"❌ Please provide more feedback.",
+"❌ Your review needs more detail.",
 
 ephemeral:true
 
@@ -166,18 +165,23 @@ ephemeral:true
 
 
 
+
+
+// ===============================
+// SAVE PENDING VOUCH
+// ===============================
+
+
 let vouches = {};
 
 
 
-if(fs.existsSync(path)){
+if(fs.existsSync(vouchPath)){
 
 
 vouches =
 JSON.parse(
-
-fs.readFileSync(path)
-
+fs.readFileSync(vouchPath)
 );
 
 
@@ -185,30 +189,46 @@ fs.readFileSync(path)
 
 
 
+
 vouches[userID] = {
 
-
-rating,
-
-feedback,
-
-service,
 
 username:
 interaction.user.username,
 
 
-time:
-Date.now()
+userID,
+
+
+rating:
+ratingNumber,
+
+
+service,
+
+
+feedback,
+
+
+created:
+Date.now(),
+
+
+
+expires:
+Date.now() + 5 * 60 * 1000
+
 
 
 };
 
 
 
+
+
 fs.writeFileSync(
 
-path,
+vouchPath,
 
 JSON.stringify(
 
@@ -225,7 +245,13 @@ null,
 
 
 
-// Save cooldown
+
+
+
+// ===============================
+// COOLDOWN SAVE
+// ===============================
+
 
 cooldowns[userID] =
 Date.now();
@@ -252,14 +278,24 @@ null,
 
 
 
+
 await interaction.reply({
 
 content:
-"✅ Vouch saved!\n\n📸 Now upload your proof image/video.",
+`
+✅ **Vouch started!**
+
+📸 Upload your proof screenshot/video in this channel.
+
+⏳ You have **5 minutes**.
+
+After uploading, Sinner Services will automatically post your verified vouch.
+`,
 
 ephemeral:true
 
 });
+
 
 
 
